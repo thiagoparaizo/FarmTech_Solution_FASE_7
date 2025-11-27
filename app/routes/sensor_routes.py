@@ -4,7 +4,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.services.sql_db_service import SQLDatabaseService
 from app.services.db_service import DatabaseService
 from datetime import datetime, timedelta
-
 sensor_bp = Blueprint('sensores', __name__)
 
 # Obter instâncias de serviço
@@ -1080,3 +1079,34 @@ def processar_arquivo_csv(caminho_arquivo, sensor_id, campo_id, separador, criar
         
     except Exception as e:
         return {'sucesso': False, 'erro': str(e)}
+
+
+# @sensor_bp.route('/notebook-results')
+# def notebook_results():
+#     """Converte e exibe o notebook PBL como HTML"""
+#     try:
+#         # Caminho para o notebook
+#         notebook_path = os.path.join(current_app.root_path, '..', 'fase6', 'pbl.ipynb')
+        
+#         if not os.path.exists(notebook_path):
+#             return f"Notebook não encontrado em: {notebook_path}", 404
+            
+#         # Ler o notebook
+#         with open(notebook_path, 'r', encoding='utf-8') as f:
+#             notebook_content = nbformat.read(f, as_version=4)
+            
+#         # Configurar o exportador HTML
+#         html_exporter = HTMLExporter()
+#         html_exporter.template_name = 'classic' # ou 'lab'
+        
+#         # Converter para HTML
+#         (body, resources) = html_exporter.from_notebook_node(notebook_content)
+        
+#         return body
+#     except Exception as e:
+#         return f"Erro ao processar o notebook: {str(e)}", 500
+
+@sensor_bp.route('/analise-notebook')
+def analise_notebook():
+    """Página de análise com Jupyter Notebook"""
+    return render_template('sensores/analise_notebook.html')

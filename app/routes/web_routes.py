@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, Response
 from app.services.db_service import DatabaseService
 from app.models.cultura import Cultura
 from app.models.campo import Campo
@@ -8,7 +8,7 @@ import os
 import time
 import threading
 import webbrowser
-from flask import redirect, url_for, jsonify
+
 
 web_bp = Blueprint('web', __name__)
 
@@ -347,19 +347,6 @@ def iniciar_dashboard():
         "mensagem": "Dashboard iniciado com sucesso",
         "url": "http://localhost:8501"
     })
-    
-    # Redirecionar para a página de sensores enquanto o dashboard inicia
-    # Ou retornar JSON se for uma chamada AJAX
-    # if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-    #     return jsonify({
-    #         "sucesso": True,
-    #         "mensagem": "Dashboard está iniciando...",
-    #         "url": "http://localhost:8501"
-    #     })
-    # else:
-    #     # Redirecionar para a página de sensores com mensagem
-    #     flash('Dashboard está sendo iniciado. Aguarde um momento...', 'info')
-    #     return redirect(url_for('sensores.index'))
     
 @web_bp.route('/iniciar-dashboard-ml')
 def iniciar_dashboard_ml():

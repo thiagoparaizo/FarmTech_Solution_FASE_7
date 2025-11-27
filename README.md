@@ -25,6 +25,29 @@ O EasyAgro é uma aplicação web desenvolvida para a gestão agrícola digital,
 
 Esta aplicação web leve implementada em Python integra controle de produção, rastreabilidade, análise de dados, monitoramento por sensores e apoio à gestão em uma plataforma única e amigável. Ela funciona como uma *porta de entrada digital* para o agricultor familiar, organizando suas informações e conectando-o a benefícios, sejam conhecimentos ou créditos.
 
+## 🔗 Integração das Fases do Projeto
+
+A aplicação integra múltiplas fases do projeto em uma solução unificada:
+
+### **Fase Atual - Interface Unificada de Análise**
+Na página de **Sensores**, foram adicionadas três funcionalidades de visualização avançada:
+
+- **📊 Abrir Dashboard**: Abre o dashboard interativo Streamlit com análise de dados dos sensores em tempo real
+- **🤖 Abrir Dashboard ML**: Visualiza o dashboard do modelo de Machine Learning para predições e análises preditivas
+- **📓 Análise Notebook**: Renderiza o Jupyter Notebook com análises exploratórias completas, gráficos e insights dos dados coletados
+
+### **Fases Integradas**
+- **Fase 1-4**: Gestão de culturas, campos e cálculos agrícolas
+- **Fase 6**: Análise de dados via Jupyter Notebook convertido para HTML
+- **Fase 7**: Modelo de Machine Learning integrado via dashboard Streamlit
+
+### **Detalhes Técnicos da Integração**
+- Conversão automática de Jupyter Notebook (.ipynb) para HTML via script Python
+- Notebooks renderizados preservam gráficos, células de código e resultados de execução
+- Dashboards Streamlit executados em processos separados e acessíveis via interface web
+- Estrutura de arquivos: `fase6/pbl.ipynb` → `app/static/fase6/pbl.html`
+
+
 ## Documentação e Sreenshots do Sistema
 [ Veja a Documentação e Sreenshots do Sistema em funcionamento ](doc/documentacao.md)
 

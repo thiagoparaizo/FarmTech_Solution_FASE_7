@@ -43,3 +43,8 @@ cachetools>=5.3.0  # Cache avançado
 # Monitoramento
 psutil>=5.9.0  # Monitoramento de sistema
 py-cpuinfo>=9.0.0  # Informações de hardware
+
+# Notebook Conversion
+nbconvert>=7.0.0
+nbformat>=5.0.0
+ipython>=8.0.0
