@@ -32,9 +32,16 @@ A aplicação integra múltiplas fases do projeto em uma solução unificada:
 ### **Fase Atual - Interface Unificada de Análise**
 Na página de **Sensores**, foram adicionadas três funcionalidades de visualização avançada:
 
+
+![Tela Principal](doc/fase_7_image__1.png)
+
 - **📊 Abrir Dashboard**: Abre o dashboard interativo Streamlit com análise de dados dos sensores em tempo real
+![Tela Dashboard](doc/fase_7_image__4.png)
 - **🤖 Abrir Dashboard ML**: Visualiza o dashboard do modelo de Machine Learning para predições e análises preditivas
+![Tela Dashboard ML](doc/fase_7_image__5.png)
 - **📓 Análise Notebook**: Renderiza o Jupyter Notebook com análises exploratórias completas, gráficos e insights dos dados coletados
+![Tela Notebook](doc/fase_7_image__6.png)
+![Tela Notebook](doc/fase_7_image__7.png)
 
 ### **Fases Integradas**
 - **Fase 1-4**: Gestão de culturas, campos e cálculos agrícolas
