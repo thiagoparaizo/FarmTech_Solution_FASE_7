@@ -1,0 +1,156 @@
+[
+    {
+        "_id": "67e31ae300dcb29286e6cd7b",
+        "nome_cultura": "Mandioca",
+        "nome_cientifico": "Macaxeira",
+        "descricao": "Mandioca (Macaxeira), variedade para mesa ou indústria, adaptada ao litoral cearense.",
+        "dados_agronomicos": {
+            "densidade_plantio": {
+                "espacamento_m": {
+                    "entre_linhas": 1.0,
+                    "entre_plantas": 1.0
+                },
+                "plantas_por_hectare": 10000
+            },
+            "ciclo_producao_dias": {
+                "minimo": 240,
+                "maximo": 540
+            }
+        },
+        "clima_solo": {
+            "temperatura_ideal_c": {
+                "minima": 20,
+                "maxima": 27
+            },
+            "precipitacao_minima_mm": 500,
+            "precipitacao_maxima_mm": 800,
+            "tipo_solo_ideal": "arenoso ou areno-argiloso",
+            "ph_ideal": {
+                "minimo": 5.5,
+                "maximo": 6.5
+            },
+            "tolerancia_salinidade": "moderada",
+            "estrategias_climaticas": [
+                "cobertura morta",
+                "plantio em camalhões"
+            ]
+        },
+        "fertilizantes_insumos": {
+            "adubacao_NPK_por_hectare_kg": {
+                "N": 60,
+                "P2O5": 40,
+                "K2O": 50
+            },
+            "adubacao_organica_recomendada": "esterco bovino ou composto orgânico (5-10 litros por cova)",
+            "correcao_solo": {
+                "calagem": "calcário dolomítico, 1.5 a 2 ton/ha",
+                "gessagem": "não essencial, recomendável em solos pobres em Ca e S"
+            },
+            "frequencia_adubacao": "Plantio e cobertura aos 3-4 meses"
+        }
+    },
+    {
+        "_id": "67e31ae300dcb29286e6cd7c",
+        "nome_cultura": "Feijão-Caupi",
+        "nome_cientifico": "Vigna unguiculata",
+        "descricao": "Feijão-de-corda adaptado ao semiárido cearense, utilizado tanto verde quanto seco.",
+        "dados_agronomicos": {
+            "densidade_plantio": {
+                "espacamento_m": {
+                    "entre_linhas": 0.8,
+                    "entre_plantas": 0.25
+                },
+                "plantas_por_hectare": 50000
+            },
+            "ciclo_producao_dias": {
+                "minimo": 60,
+                "maximo": 90
+            }
+        },
+        "clima_solo": {
+            "temperatura_ideal_c": {
+                "minima": 20,
+                "maxima": 34
+            },
+            "precipitacao_minima_mm": 350,
+            "precipitacao_maxima_mm": 600,
+            "tipo_solo_ideal": "franco-arenoso bem drenado",
+            "ph_ideal": {
+                "minimo": 5.5,
+                "maximo": 6.5
+            },
+            "tolerancia_salinidade": "baixa",
+            "estrategias_climaticas": [
+                "plantio em camalhões",
+                "plantio escalonado"
+            ]
+        },
+        "fertilizantes_insumos": {
+            "adubacao_NPK_por_hectare_kg": {
+                "N": 20,
+                "P2O5": 50,
+                "K2O": 40
+            },
+            "adubacao_organica_recomendada": "esterco bovino (2 litros por metro linear)",
+            "correcao_solo": {
+                "calagem": "calcário dolomítico, 1 a 2 ton/ha",
+                "gessagem": "opcional, recomendado se faltar cálcio e enxofre"
+            },
+            "frequencia_adubacao": "Na semeadura e eventualmente cobertura nitrogenada após 20 dias"
+        }
+    },
+    {
+        "_id": "unique_id_cultura",
+        "nome_cultura": "Cajueiro",
+        "nome_cientifico": "Anacardium occidentale",
+        "descricao": "O cajueiro é uma árvore tropical perene, nativa do Brasil, cultivada principalmente por suas castanhas e pseudofrutos (cajus).",
+        "dados_agronomicos": {
+            "densidade_plantio": {
+                "espacamento_m": {
+                    "entre_linhas": 7.0,
+                    "entre_plantas": 7.0
+                },
+                "plantas_por_hectare": 204
+            },
+            "ciclo_producao_anos": {
+                "inicio_producao": 3,
+                "plena_producao": 8,
+                "vida_util": 30
+            }
+        },
+        "clima_solo": {
+            "temperatura_ideal_c": {
+                "minima": 22,
+                "maxima": 28
+            },
+            "precipitacao_anual_mm": {
+                "minima": 600,
+                "ideal": 1000,
+                "maxima": 2500
+            },
+            "tipo_solo_ideal": "arenoso a areno-argiloso, bem drenado",
+            "ph_ideal": {
+                "minimo": 5.5,
+                "maximo": 6.5
+            },
+            "tolerancia_salinidade": "moderada",
+            "estrategias_climaticas": [
+                "plantio em áreas com baixa incidência de geadas",
+                "uso de cobertura morta para conservação de umidade"
+            ]
+        },
+        "fertilizantes_insumos": {
+            "adubacao_NPK_por_planta_ano_g": {
+                "N": 200,
+                "P2O5": 150,
+                "K2O": 150
+            },
+            "adubacao_organica_recomendada": "10 a 20 litros de esterco bovino por cova no plantio",
+            "correcao_solo": {
+                "calagem": "aplicar calcário para elevar o pH conforme análise de solo",
+                "gessagem": "recomendada em solos com deficiência de cálcio e enxofre"
+            },
+            "frequencia_adubacao": "anual, dividida em duas aplicações: início e final da estação chuvosa"
+        }
+    }
+]

@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if modo == 'editar' %}
+        Editar Cultura - FarmTech Solutions
+    {% else %}
+        Nova Cultura - FarmTech Solutions
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title mb-0">
+            {% if modo == 'editar' %}
+                <i class="bi bi-pencil"></i> Editar Cultura
+            {% else %}
+                <i class="bi bi-plus-circle"></i> Nova Cultura
+            {% endif %}
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Informações Básicas</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="nome_cultura" class="form-label">Nome da Cultura</label>
+                    <input type="text" class="form-control" id="nome_cultura" name="nome_cultura" required
+                           value="{{ cultura.nome_cultura if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe o nome da cultura.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="nome_cientifico" class="form-label">Nome Científico</label>
+                    <input type="text" class="form-control" id="nome_cientifico" name="nome_cientifico" required
+                           value="{{ cultura.nome_cientifico if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe o nome científico.
+                    </div>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <textarea class="form-control" id="descricao" name="descricao" rows="3" required>{{ cultura.descricao if cultura else '' }}</textarea>
+                    <div class="invalid-feedback">
+                        Por favor, forneça uma descrição.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Dados Agronômicos</h4>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="entre_linhas" class="form-label">Espaçamento entre Linhas (m)</label>
+                    <input type="number" step="0.1" min="0.1" class="form-control" id="entre_linhas" name="entre_linhas" required
+                           value="{{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_linhas if cultura else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="entre_plantas" class="form-label">Espaçamento entre Plantas (m)</label>
+                    <input type="number" step="0.1" min="0.1" class="form-control" id="entre_plantas" name="entre_plantas" required
+                           value="{{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_plantas if cultura else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="plantas_por_hectare" class="form-label">Plantas por Hectare</label>
+                    <input type="number" min="1" class="form-control" id="plantas_por_hectare" name="plantas_por_hectare" required
+                           value="{{ cultura.dados_agronomicos.densidade_plantio.plantas_por_hectare if cultura else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ciclo_minimo" class="form-label">Ciclo Mínimo (dias)</label>
+                    <input type="number" min="1" class="form-control" id="ciclo_minimo" name="ciclo_minimo" required
+                           value="{{ cultura.dados_agronomicos.ciclo_producao_dias.minimo if cultura else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ciclo_maximo" class="form-label">Ciclo Máximo (dias)</label>
+                    <input type="number" min="1" class="form-control" id="ciclo_maximo" name="ciclo_maximo" required
+                           value="{{ cultura.dados_agronomicos.ciclo_producao_dias.maximo if cultura else '' }}">
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Clima e Solo</h4>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="temp_minima" class="form-label">Temperatura Mínima (°C)</label>
+                    <input type="number" step="0.1" class="form-control" id="temp_minima" name="temp_minima" required
+                           value="{{ cultura.clima_solo.temperatura_ideal_c.minima if cultura else '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="temp_maxima" class="form-label">Temperatura Máxima (°C)</label>
+                    <input type="number" step="0.1" class="form-control" id="temp_maxima" name="temp_maxima" required
+                           value="{{ cultura.clima_solo.temperatura_ideal_c.maxima if cultura else '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="precipitacao_minima" class="form-label">Precipitação Mínima (mm)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="precipitacao_minima" name="precipitacao_minima" required
+                           value="{{ cultura.clima_solo.precipitacao_minima_mm if cultura else '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="precipitacao_maxima" class="form-label">Precipitação Máxima (mm)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="precipitacao_maxima" name="precipitacao_maxima" required
+                           value="{{ cultura.clima_solo.precipitacao_maxima_mm if cultura else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="tipo_solo" class="form-label">Tipo de Solo Ideal</label>
+                    <input type="text" class="form-control" id="tipo_solo" name="tipo_solo" required
+                           value="{{ cultura.clima_solo.tipo_solo_ideal if cultura else '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="ph_minimo" class="form-label">pH Mínimo</label>
+                    <input type="number" step="0.1" min="0" max="14" class="form-control" id="ph_minimo" name="ph_minimo" required
+                           value="{{ cultura.clima_solo.ph_ideal.minimo if cultura else '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="ph_maximo" class="form-label">pH Máximo</label>
+                    <input type="number" step="0.1" min="0" max="14" class="form-control" id="ph_maximo" name="ph_maximo" required
+                           value="{{ cultura.clima_solo.ph_ideal.maximo if cultura else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="tolerancia_salinidade" class="form-label">Tolerância à Salinidade</label>
+                    <select class="form-select" id="tolerancia_salinidade" name="tolerancia_salinidade" required>
+                        <option value="">Selecione...</option>
+                        <option value="baixa" {% if cultura and cultura.clima_solo.tolerancia_salinidade == 'baixa' %}selected{% endif %}>Baixa</option>
+                        <option value="moderada" {% if cultura and cultura.clima_solo.tolerancia_salinidade == 'moderada' %}selected{% endif %}>Moderada</option>
+                        <option value="alta" {% if cultura and cultura.clima_solo.tolerancia_salinidade == 'alta' %}selected{% endif %}>Alta</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="estrategias_climaticas" class="form-label">Estratégias Climáticas (separadas por vírgula)</label>
+                    <input type="text" class="form-control" id="estrategias_climaticas" name="estrategias_climaticas" required
+                           value="{{ cultura.clima_solo.estrategias_climaticas|join(',') if cultura else '' }}">
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Fertilizantes e Insumos</h4>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="npk_n" class="form-label">Quantidade de N por Hectare (kg)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="npk_n" name="npk_n" required
+                           value="{{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.N if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a quantidade de nitrogênio.
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="npk_p" class="form-label">Quantidade de P2O5 por Hectare (kg)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="npk_p" name="npk_p" required
+                           value="{{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.P2O5 if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a quantidade de fósforo.
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="npk_k" class="form-label">Quantidade de K2O por Hectare (kg)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="npk_k" name="npk_k" required
+                           value="{{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.K2O if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a quantidade de potássio.
+                    </div>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label for="adubacao_organica" class="form-label">Adubação Orgânica Recomendada</label>
+                    <input type="text" class="form-control" id="adubacao_organica" name="adubacao_organica" required
+                           value="{{ cultura.fertilizantes_insumos.adubacao_organica_recomendada if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a adubação orgânica recomendada.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="calagem" class="form-label">Calagem</label>
+                    <input type="text" class="form-control" id="calagem" name="calagem" required
+                           value="{{ cultura.fertilizantes_insumos.correcao_solo.calagem if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a calagem.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="gessagem" class="form-label">Gessagem</label>
+                    <input type="text" class="form-control" id="gessagem" name="gessagem" required
+                           value="{{ cultura.fertilizantes_insumos.correcao_solo.gessagem if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a gessagem.
+                    </div>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label for="frequencia_adubacao" class="form-label">Frequência de Adubação</label>
+                    <input type="text" class="form-control" id="frequencia_adubacao" name="frequencia_adubacao" required
+                           value="{{ cultura.fertilizantes_insumos.frequencia_adubacao if cultura else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a frequência de adubação.
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('web.listar_culturas') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 
+                    {% if modo == 'editar' %}
+                        Atualizar Cultura
+                    {% else %}
+                        Salvar Cultura
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de ajuda para adubação -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="helpModalLabel">Ajuda para Adubação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <h6>NPK - O que significa?</h6>
+                <p>NPK refere-se aos três principais nutrientes necessários para o desenvolvimento das plantas:</p>
+                <ul>
+                    <li><strong>N (Nitrogênio):</strong> Responsável pelo crescimento vegetativo e cor verde da planta.</li>
+                    <li><strong>P (Fósforo/P2O5):</strong> Importante para o desenvolvimento das raízes e floração.</li>
+                    <li><strong>K (Potássio/K2O):</strong> Auxilia na resistência a doenças e qualidade dos frutos.</li>
+                </ul>
+                
+                <h6>Adubação Orgânica</h6>
+                <p>Refere-se a fertilizantes de origem animal ou vegetal, como esterco bovino, composto orgânico, etc.</p>
+                
+                <h6>Calagem e Gessagem</h6>
+                <p>São práticas de correção do solo:</p>
+                <ul>
+                    <li><strong>Calagem:</strong> Aplicação de calcário para corrigir a acidez do solo.</li>
+                    <li><strong>Gessagem:</strong> Aplicação de gesso agrícola para melhorar as camadas mais profundas do solo.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Validação do formulário
+    (() => {
+        'use strict'
+        
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        // Loop over them and prevent submission
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+    
+    // Adicionar links de ajuda para campos de adubação
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar ícones de ajuda ao lado dos rótulos
+        const fertilizantesLabels = document.querySelectorAll('[for^="npk_"], [for="adubacao_organica"], [for="calagem"], [for="gessagem"]');
+        
+        fertilizantesLabels.forEach(label => {
+            const helpIcon = document.createElement('i');
+            helpIcon.className = 'bi bi-question-circle text-info ms-1';
+            helpIcon.style.cursor = 'pointer';
+            helpIcon.setAttribute('data-bs-toggle', 'modal');
+            helpIcon.setAttribute('data-bs-target', '#helpModal');
+            label.appendChild(helpIcon);
+        });
+    });
+</script>
+{% endblock %}

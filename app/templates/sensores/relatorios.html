@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios de Sensores - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-graph-up"></i> Relatórios de Sensores</h2>
+    <div>
+        <a href="{{ url_for('sensores.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Relatório por Sensor</h5>
+            </div>
+            <div class="card-body">
+                <form id="form-relatorio-sensor">
+                    <div class="mb-3">
+                        <label for="sensor_id" class="form-label">Selecione o Sensor</label>
+                        <select class="form-select" id="sensor_id" required>
+                            <option value="">Selecione...</option>
+                            <!-- Opções serão carregadas via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodo" class="form-label">Período</label>
+                        <select class="form-select" id="periodo">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="15">Últimos 15 dias</option>
+                            <option value="30" selected>Últimos 30 dias</option>
+                            <option value="90">Últimos 3 meses</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Gerar Relatório
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Relatório por Campo</h5>
+            </div>
+            <div class="card-body">
+                <form id="form-relatorio-campo">
+                    <div class="mb-3">
+                        <label for="campo_id" class="form-label">Selecione o Campo</label>
+                        <select class="form-select" id="campo_id" required>
+                            <option value="">Selecione...</option>
+                            <!-- Opções serão carregadas via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodo_campo" class="form-label">Período</label>
+                        <select class="form-select" id="periodo_campo">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="15">Últimos 15 dias</option>
+                            <option value="30" selected>Últimos 30 dias</option>
+                            <option value="90">Últimos 3 meses</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-search"></i> Gerar Relatório
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="relatorio-container" class="mt-4" style="display: none;">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0" id="relatorio-titulo">Resultados do Relatório</h5>
+        </div>
+        <div class="card-body">
+            <div id="grafico-relatorio" style="height: 300px;"></div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h6 class="border-bottom pb-2">Estatísticas</h6>
+                    <div id="estatisticas-container">
+                        <!-- Estatísticas serão inseridas aqui -->
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="border-bottom pb-2">Recomendações</h6>
+                    <div id="recomendacoes-container">
+                        <!-- Recomendações serão inseridas aqui -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h6 class="border-bottom pb-2">Histórico de Leituras</h6>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead id="tabela-header">
+                            <!-- Cabeçalho da tabela será inserido aqui -->
+                        </thead>
+                        <tbody id="tabela-body">
+                            <!-- Dados da tabela serão inseridos aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Carregar lista de sensores
+        fetch('/sensores/api/sensores')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar sensores');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const sensorSelect = document.getElementById('sensor_id');
+                
+                // Limpar opções existentes
+                sensorSelect.innerHTML = '<option value="">Selecione...</option>';
+                
+                // Adicionar opções de sensores
+                data.forEach(sensor => {
+                    const option = document.createElement('option');
+                    option.value = sensor.id;
+                    
+                    let tipoTexto = 'Sensor';
+                    if (sensor.tipo === 'S1') tipoTexto = 'Umidade';
+                    else if (sensor.tipo === 'S2') tipoTexto = 'pH';
+                    else if (sensor.tipo === 'S3') tipoTexto = 'Nutrientes';
+                    
+                    option.textContent = `${tipoTexto} - ID: ${sensor.id}`;
+                    sensorSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao carregar a lista de sensores. Por favor, tente novamente mais tarde.');
+            });
+        
+        // Carregar lista de campos
+        fetch('/api/campos')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar campos');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const campoSelect = document.getElementById('campo_id');
+                
+                // Limpar opções existentes
+                campoSelect.innerHTML = '<option value="">Selecione...</option>';
+                
+                // Adicionar opções de campos
+                data.forEach(campo => {
+                    const option = document.createElement('option');
+                    option.value = campo._id;
+                    option.textContent = `${campo.campo.cultura_plantada} - ${campo.nome_produtor}`;
+                    campoSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao carregar a lista de campos. Por favor, tente novamente mais tarde.');
+            });
+        
+        // Formulário de relatório por sensor
+        document.getElementById('form-relatorio-sensor').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const sensorId = document.getElementById('sensor_id').value;
+            const periodo = document.getElementById('periodo').value;
+            
+            if (!sensorId) {
+                alert('Por favor, selecione um sensor.');
+                return;
+            }
+            
+            // Mostrar indicador de carregamento
+            document.getElementById('relatorio-container').style.display = 'block';
+            document.getElementById('relatorio-titulo').textContent = 'Carregando...';
+            document.getElementById('grafico-relatorio').innerHTML = '<div class="text-center p-5"><div id="loading-spinner1" class="spinner-border text-primary" role="status"></div></div>';
+            document.getElementById('estatisticas-container').innerHTML = '';
+            document.getElementById('recomendacoes-container').innerHTML = '';
+            document.getElementById('tabela-header').innerHTML = '';
+            document.getElementById('tabela-body').innerHTML = '';
+            
+            // Fazer requisição para a API
+            fetch(`/sensores/api/relatorio/sensor/${sensorId}?dias=${periodo}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao gerar relatório');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Atualizar título
+                    document.getElementById('relatorio-titulo').textContent = `Relatório do Sensor ${data.sensor.tipo} (ID: ${data.sensor.id})`;
+                    
+                    // Extrair dados para o gráfico
+                    const dataHoras = [];
+                    const valores = [];
+                    const unidade = data.leituras.length > 0 ? data.leituras[0].unidade : '';
+                    
+                    data.leituras.forEach(leitura => {
+                        dataHoras.push(leitura.data_hora.substring(0, 16).replace('T', ' '));
+                        valores.push(parseFloat(leitura.valor));
+                    });
+                    
+                    // Criar gráfico
+                    const chartData = [{
+                        x: dataHoras,
+                        y: valores,
+                        type: 'line',
+                        name: unidade
+                    }];
+                    
+                    const layout = {
+                        title: 'Histórico de Leituras',
+                        xaxis: {
+                            title: 'Data e Hora'
+                        },
+                        yaxis: {
+                            title: unidade
+                        }
+                    };
+                    
+                    Plotly.newPlot('grafico-relatorio', chartData, layout);
+                    document.getElementById('loading-spinner1').style.display = 'none';
+                    
+                    // Mostrar estatísticas
+                    if (data.estatisticas) {
+                        let estatisticasHtml = `
+                            <div class="row">
+                                <div class="col-6">
+                                    <p><strong>Média:</strong> ${data.estatisticas.media.toFixed(2)}</p>
+                                    <p><strong>Mínimo:</strong> ${data.estatisticas.min.toFixed(2)}</p>
+                                </div>
+                                <div class="col-6">
+                                    <p><strong>Máximo:</strong> ${data.estatisticas.max.toFixed(2)}</p>
+                                    <p><strong>Desvio Padrão:</strong> ${data.estatisticas.desvio_padrao.toFixed(2)}</p>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('estatisticas-container').innerHTML = estatisticasHtml;
+                    } else {
+                        document.getElementById('estatisticas-container').innerHTML = '<p class="text-muted">Nenhuma estatística disponível.</p>';
+                    }
+                    
+                    // Mostrar recomendações (exemplo)
+                    document.getElementById('recomendacoes-container').innerHTML = '<p class="text-muted"><b>Em construção...</b> Recomendações serão baseadas na análise dos dados do sensor.  </p>';
+                    
+                    // Mostrar tabela de leituras
+                    document.getElementById('tabela-header').innerHTML = `
+                        <tr>
+                            <th>Data e Hora</th>
+                            <th>Valor</th>
+                            <th>Unidade</th>
+                        </tr>
+                    `;
+                    
+                    let tabelaHtml = '';
+                    data.leituras.forEach(leitura => {
+                        tabelaHtml += `
+                            <tr>
+                                <td>${leitura.data_hora.substring(0, 16).replace('T', ' ')}</td>
+                                <td>${parseFloat(leitura.valor).toFixed(2)}</td>
+                                <td>${leitura.unidade}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    document.getElementById('tabela-body').innerHTML = tabelaHtml || '<tr><td colspan="3" class="text-center">Nenhuma leitura encontrada.</td></tr>';
+                    
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    document.getElementById('relatorio-titulo').textContent = 'Erro ao gerar relatório';
+                    document.getElementById('grafico-relatorio').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Ocorreu um erro ao gerar o relatório. Por favor, tente novamente.
+                        </div>
+                    `;
+                });
+        });
+        
+        // Formulário de relatório por campo
+        document.getElementById('form-relatorio-campo').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const campoId = document.getElementById('campo_id').value;
+            const periodo = document.getElementById('periodo_campo').value;
+            
+            if (!campoId) {
+                alert('Por favor, selecione um campo.');
+                return;
+            }
+            
+            // Mostrar indicador de carregamento
+            document.getElementById('relatorio-container').style.display = 'block';
+            document.getElementById('relatorio-titulo').textContent = 'Carregando...';
+            document.getElementById('grafico-relatorio').innerHTML = '<div class="text-center p-5"><div id="loading-spinner2" class="spinner-border text-primary" role="status"></div></div>';
+            document.getElementById('estatisticas-container').innerHTML = '';
+            document.getElementById('recomendacoes-container').innerHTML = '';
+            document.getElementById('tabela-header').innerHTML = '';
+            document.getElementById('tabela-body').innerHTML = '';
+            
+            // Fazer requisição para a API
+            fetch(`/sensores/api/relatorio/campo/${campoId}?dias=${periodo}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao gerar relatório');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Atualizar título
+                    document.getElementById('relatorio-titulo').textContent = `Relatório do Campo: ${data.campo.cultura_plantada} - ${data.campo.nome_produtor}`;
+                    
+                    // Criar visualização para relatório de campo
+                    // (Este é um exemplo simplificado - você pode adaptar conforme necessário)
+                    
+                    // Verificar se há sensores
+                    if (data.sensores && data.sensores.length > 0) {
+                        // Estatísticas por tipo de sensor
+                        const estatisticasHtml = `
+                            <div class="alert alert-info">
+                                <p><strong>Área do Campo:</strong> ${data.campo.area_hectare.toFixed(2)} hectares</p>
+                                <p><strong>Sensores Instalados:</strong> ${data.sensores.length}</p>
+                                <p><strong>Período Analisado:</strong> ${data.periodo.dias} dias</p>
+                            </div>
+                        `;
+                        document.getElementById('estatisticas-container').innerHTML = estatisticasHtml;
+                        
+                        // Recomendações
+                        document.getElementById('recomendacoes-container').innerHTML = '<p class="text-muted">Recomendações serão baseadas na análise dos dados de todos os sensores do campo.</p>';
+                        
+                        // Tabela de aplicações
+                        if (data.aplicacoes && data.aplicacoes.length > 0) {
+                            document.getElementById('tabela-header').innerHTML = `
+                                <tr>
+                                    <th>Data e Hora</th>
+                                    <th>Tipo de Recurso</th>
+                                    <th>Quantidade</th>
+                                </tr>
+                            `;
+                            
+                            let tabelaHtml = '';
+                            data.aplicacoes.forEach(aplicacao => {
+                                tabelaHtml += `
+                                    <tr>
+                                        <td>${aplicacao.data_hora.substring(0, 16).replace('T', ' ')}</td>
+                                        <td>${aplicacao.tipo_recurso}</td>
+                                        <td>${aplicacao.quantidade.toFixed(2)} ${aplicacao.unidade}</td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            document.getElementById('tabela-body').innerHTML = tabelaHtml;
+                        } else {
+                            document.getElementById('tabela-header').innerHTML = `
+                                <tr>
+                                    <th>Sensor</th>
+                                    <th>Tipo</th>
+                                    <th>Média</th>
+                                    <th>Mínimo</th>
+                                    <th>Máximo</th>
+                                </tr>
+                            `;
+                            
+                            let tabelaHtml = '';
+                            data.sensores.forEach(sensor => {
+                                const stats = sensor.estatisticas || { media: 0, min: 0, max: 0 };
+                                
+                                tabelaHtml += `
+                                    <tr>
+                                        <td>${sensor.id}</td>
+                                        <td>${sensor.tipo}</td>
+                                        <td>${stats.media ? stats.media.toFixed(2) : 'N/A'}</td>
+                                        <td>${stats.min ? stats.min.toFixed(2) : 'N/A'}</td>
+                                        <td>${stats.max ? stats.max.toFixed(2) : 'N/A'}</td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            document.getElementById('tabela-body').innerHTML = tabelaHtml;
+                        }
+                        
+                        // Criar gráfico de barras para diferentes tipos de sensores
+                        const sensorTypes = ['S1', 'S2', 'S3'];
+                        const typeCounts = sensorTypes.map(type => 
+                            data.sensores.filter(s => s.tipo === type).length
+                        );
+                        
+                        const chartData = [{
+                            x: ['Umidade (S1)', 'pH (S2)', 'Nutrientes (S3)'],
+                            y: typeCounts,
+                            type: 'bar',
+                            marker: {
+                                color: ['#28a745', '#ffc107', '#17a2b8']
+                            }
+                        }];
+                        
+                        const layout = {
+                            title: 'Distribuição de Sensores por Tipo',
+                            xaxis: {
+                                title: 'Tipo de Sensor'
+                            },
+                            yaxis: {
+                                title: 'Quantidade'
+                            }
+                        };
+                        
+                        Plotly.newPlot('grafico-relatorio', chartData, layout);
+                        
+                        // Ocultar indicador de carregamento
+                        document.getElementById('loading-spinner2').style.display = 'none';
+                    } else {
+                        document.getElementById('grafico-relatorio').innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Nenhum sensor instalado neste campo.
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    document.getElementById('relatorio-titulo').textContent = 'Erro ao gerar relatório';
+                    document.getElementById('grafico-relatorio').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Ocorreu um erro ao gerar o relatório. Por favor, tente novamente.
+                        </div>
+                    `;
+                });
+        });
+    });
+</script>
+{% endblock %}

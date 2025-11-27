@@ -1,0 +1,170 @@
+<!-- app/templates/catalogo/detalhe_modelo.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ modelo.nome }} - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        {% if modelo.tipo == 'S1' %}
+        <i class="bi bi-droplet"></i>
+        {% elif modelo.tipo == 'S2' %}
+        <i class="bi bi-calculator"></i>
+        {% elif modelo.tipo == 'S3' %}
+        <i class="bi bi-moisture"></i>
+        {% else %}
+        <i class="bi bi-broadcast"></i>
+        {% endif %}
+        {{ modelo.nome }}
+    </h2>
+    <div>
+        <a href="{{ url_for('catalogo.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Informações do Modelo</h5>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th style="width: 150px;">Nome:</th>
+                    <td>{{ modelo.nome }}</td>
+                </tr>
+                <tr>
+                    <th>Tipo:</th>
+                    <td>
+                        {% if modelo.tipo == 'S1' %}
+                        <span class="badge bg-primary">Sensor de Umidade</span>
+                        {% elif modelo.tipo == 'S2' %}
+                        <span class="badge bg-warning">Sensor de pH</span>
+                        {% elif modelo.tipo == 'S3' %}
+                        <span class="badge bg-info">Sensor de Nutrientes</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Precisão:</th>
+                    <td>{{ modelo.precisao }}</td>
+                </tr>
+                <tr>
+                    <th>Faixa de Medição:</th>
+                    <td>{{ modelo.faixa_medicao }}</td>
+                </tr>
+                <tr>
+                    <th>Preço Referência:</th>
+                    <td>{{ modelo.preco_referencia }}</td>
+                </tr>
+                <tr>
+                    <th>Descrição:</th>
+                    <td>{{ modelo.descricao }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Fabricantes</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for fabricante in modelo.fabricantes %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">{{ fabricante.nome }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>País:</strong> {{ fabricante.pais }}</p>
+                        <p><strong>Website:</strong> <a href="{{ fabricante.website }}" target="_blank">{{ fabricante.website }}</a></p>
+                        <p>{{ fabricante.descricao }}</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ url_for('catalogo.detalhe_fabricante', fabricante_id=fabricante.id) }}" class="btn btn-primary btn-sm">Ver Fabricante</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Nenhum fabricante associado a este modelo.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Informações Técnicas</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h6>Características</h6>
+                <ul>
+                    {% if modelo.tipo == 'S1' %}
+                    <li>Medição de umidade do solo por resistência elétrica</li>
+                    <li>Compensação de temperatura</li>
+                    <li>Proteção contra corrosão</li>
+                    <li>Calibração automática</li>
+                    {% elif modelo.tipo == 'S2' %}
+                    <li>Eletrodo de vidro para medição de pH</li>
+                    <li>Compensação de temperatura</li>
+                    <li>Calibração em dois pontos</li>
+                    <li>Proteção contra sujeira e entupimentos</li>
+                    {% elif modelo.tipo == 'S3' %}
+                    <li>Medição de N, P e K por refletância UV-VIS</li>
+                    <li>Eletrodos seletivos de íons</li>
+                    <li>Compensação de umidade do solo</li>
+                    <li>Calibração digital</li>
+                    {% endif %}
+                </ul>
+                
+                <h6 class="mt-3">Aplicações Recomendadas</h6>
+                <ul>
+                    {% if modelo.tipo == 'S1' %}
+                    <li>Irrigação de precisão</li>
+                    <li>Monitoramento contínuo de umidade do solo</li>
+                    <li>Otimização de uso de água</li>
+                    <li>Prevenção de estresse hídrico em culturas</li>
+                    {% elif modelo.tipo == 'S2' %}
+                    <li>Monitoramento de acidez do solo</li>
+                    <li>Ajuste de calagem e correção de pH</li>
+                    <li>Otimização de disponibilidade de nutrientes</li>
+                    <li>Acompanhamento de mudanças no solo</li>
+                    {% elif modelo.tipo == 'S3' %}
+                    <li>Fertilização de precisão</li>
+                    <li>Monitoramento de disponibilidade de nutrientes</li>
+                    <li>Detecção precoce de deficiências nutricionais</li>
+                    <li>Otimização de adubação</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Compatibilidade</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Interfaces:</strong> USB, Wi-Fi, Bluetooth</p>
+                        <p><strong>Alimentação:</strong> Bateria recarregável ou energia solar</p>
+                        <p><strong>Integração:</strong> APIs disponíveis para integração com sistemas de gestão agrícola</p>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> Para mais informações técnicas, consulte os fabricantes deste modelo.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

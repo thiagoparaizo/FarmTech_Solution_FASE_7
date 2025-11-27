@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+      - "8501:8501"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/farmtech
+      - SQL_DATABASE_URI=mysql://farmtech:senha@mysql/farmtech_sensors
+      - ORACLE_DATABASE_URI=oracle+cx_oracle://system:senha@oracle:1521/XE
+      - OPENWEATHER_API_KEY=sua_chave_aqui
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - .:/app
+    depends_on:
+      - mongo
+      - mysql
+      - oracle
+      - redis
+    networks:
+      - farmtech-network
+    
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootsenha
+      - MYSQL_DATABASE=farmtech_sensors
+      - MYSQL_USER=farmtech
+      - MYSQL_PASSWORD=senha
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  oracle:
+    image: container-registry.oracle.com/database/express:latest
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      - ORACLE_PWD=senha
+      - ORACLE_CHARACTERSET=AL32UTF8
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/senha@//localhost:1521/XE", "AS", "SYSDBA"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - farmtech-network
+
+  ml-trainer:
+    build: .
+    command: python app/scripts/train_model.py
+    environment:
+      - SQL_DATABASE_URI=mysql://root:password@mysql:3306/farmtech
+      - MONGO_URI=mongodb://mongo:27017/farmtech
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+    depends_on:
+      - mysql
+      - mongo
+    networks:
+      - farmtech-network
+    deploy:
+      restart_policy:
+        condition: none
+
+networks:
+  farmtech-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  mysql_data:
+  oracle_data:
+  models_data:
+  logs_data:

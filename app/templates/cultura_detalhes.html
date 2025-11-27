@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cultura.nome_cultura }} - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-grid"></i> Detalhes da Cultura</h2>
+    <div>
+        <a href="{{ url_for('web.editar_cultura', cultura_id=cultura._id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRemoverCultura">
+            <i class="bi bi-trash"></i> Remover
+        </button>
+        <a href="{{ url_for('web.listar_culturas') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ cultura.nome_cultura }}</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-subtitle mb-3 text-muted">{{ cultura.nome_cientifico }}</h5>
+                <p class="card-text">{{ cultura.descricao }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Dados Agronômicos</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Espaçamento</th>
+                            <td>{{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_linhas|round(2)|default(0)|format_br(1) }}m × {{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_plantas|round(2)|default(0)|format_br(1) }}m</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Plantas por Hectare</th>
+                            <td>{{ cultura.dados_agronomicos.densidade_plantio.plantas_por_hectare|int|format_int_br }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Ciclo de Produção</th>
+                            <td>
+                                {% set min_dias = cultura.dados_agronomicos.ciclo_producao_dias.minimo|int %}
+                                {% set max_dias = cultura.dados_agronomicos.ciclo_producao_dias.maximo|int %}
+                                
+                                {% if min_dias > 365 %}
+                                    {{ (min_dias / 365)|round(1)|format_br(1) }} 
+                                    {% if (min_dias / 365)|round(1) == 1 %}ano{% else %}anos{% endif %}
+                                {% else %}
+                                    {{ min_dias|format_int_br }} dias
+                                {% endif %}
+                                
+                                a 
+                                
+                                {% if max_dias > 365 %}
+                                    {{ (max_dias / 365)|round(1)|format_br(1) }} 
+                                    {% if (max_dias / 365)|round(1) == 1 %}ano{% else %}anos{% endif %}
+                                {% else %}
+                                    {{ max_dias|format_int_br }} dias
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div id="cicloChart" style="height: 250px;" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Clima e Solo</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Temperatura Ideal</th>
+                            <td>{{ cultura.clima_solo.temperatura_ideal_c.minima }}°C a {{ cultura.clima_solo.temperatura_ideal_c.maxima }}°C</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Precipitação</th>
+                            <td>{{ cultura.clima_solo.precipitacao_minima_mm|int|format_int_br }} a {{ cultura.clima_solo.precipitacao_maxima_mm|int|format_int_br }} mm</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Tipo de Solo Ideal</th>
+                            <td>{{ cultura.clima_solo.tipo_solo_ideal }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">pH Ideal</th>
+                            <td>{{ cultura.clima_solo.ph_ideal.minimo|round(2)|default(0)|format_br(1) }} a {{ cultura.clima_solo.ph_ideal.maximo|round(2)|default(0)|format_br(1) }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Tolerância à Salinidade</th>
+                            <td>{{ cultura.clima_solo.tolerancia_salinidade }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Estratégias Climáticas</th>
+                            <td>
+                                {% for estrategia in cultura.clima_solo.estrategias_climaticas %}
+                                <span class="badge bg-secondary">{{ estrategia }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div id="climaChart" style="height: 250px;" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="bi bi-moisture"></i> Fertilizantes e Insumos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">NPK por Hectare</th>
+                                    <td>
+                                        N: {{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.N }} kg/ha<br>
+                                        P2O5: {{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.P2O5 }} kg/ha<br>
+                                        K2O: {{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.K2O }} kg/ha
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Adubação Orgânica</th>
+                                    <td>{{ cultura.fertilizantes_insumos.adubacao_organica_recomendada }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Calagem</th>
+                                    <td>{{ cultura.fertilizantes_insumos.correcao_solo.calagem }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Gessagem</th>
+                                    <td>{{ cultura.fertilizantes_insumos.correcao_solo.gessagem }}</td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Frequência de Adubação</th>
+                                    <td>{{ cultura.fertilizantes_insumos.frequencia_adubacao }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="npkChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmação de remoção -->
+<div class="modal fade" id="modalRemoverCultura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Remoção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover a cultura <strong>{{ cultura.nome_cultura }}</strong>?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('web.remover_cultura', cultura_id=cultura._id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Confirmar Remoção</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Gráfico de NPK
+    const npkData = [
+        {
+            x: ['Nitrogênio (N)', 'Fósforo (P2O5)', 'Potássio (K2O)'],
+            y: [
+                {{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.N }},
+                {{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.P2O5 }},
+                {{ cultura.fertilizantes_insumos.adubacao_NPK_por_hectare_kg.K2O }}
+            ],
+            type: 'bar',
+            marker: {
+                color: ['#28a745', '#17a2b8', '#ffc107']
+            }
+        }
+    ];
+
+    const npkLayout = {
+        title: 'Adubação NPK por Hectare (kg)',
+        showlegend: false,
+        margin: { t: 40, b: 30, l: 30, r: 30 }
+    };
+
+    Plotly.newPlot('npkChart', npkData, npkLayout);
+
+    // Gráfico de ciclo de produção
+    const cicloData = [
+        {
+            values: [
+                {{ cultura.dados_agronomicos.ciclo_producao_dias.minimo }},
+                {{ cultura.dados_agronomicos.ciclo_producao_dias.maximo - cultura.dados_agronomicos.ciclo_producao_dias.minimo }}
+            ],
+            labels: ['Mínimo', 'Variação'],
+            type: 'pie',
+            marker: {
+                colors: ['#28a745', '#20c997']
+            },
+            textinfo: 'label+value',
+            textposition: 'inside',
+            insidetextorientation: 'radial'
+        }
+    ];
+
+    const cicloLayout = {
+        title: 'Ciclo de Produção (dias)',
+        showlegend: true,
+        margin: { t: 40, b: 0, l: 0, r: 0 }
+    };
+
+    Plotly.newPlot('cicloChart', cicloData, cicloLayout);
+
+    // Gráfico de clima
+    const climaData = [
+        {
+            type: 'indicator',
+            mode: 'gauge+number',
+            value: {{ (cultura.clima_solo.temperatura_ideal_c.minima + cultura.clima_solo.temperatura_ideal_c.maxima) / 2 }},
+            title: { text: 'Temperatura Média (°C)' },
+            gauge: {
+                axis: { 
+                    range: [0, 40],
+                    tickvals: [0, 10, 20, 30, 40]
+                },
+                bar: { color: '#17a2b8' },
+                steps: [
+                    { range: [0, {{ cultura.clima_solo.temperatura_ideal_c.minima }}], color: '#e9ecef' },
+                    { range: [{{ cultura.clima_solo.temperatura_ideal_c.minima }}, {{ cultura.clima_solo.temperatura_ideal_c.maxima }}], color: '#17a2b8' },
+                    { range: [{{ cultura.clima_solo.temperatura_ideal_c.maxima }}, 40], color: '#e9ecef' }
+                ],
+                threshold: {
+                    line: { color: 'red', width: 4 },
+                    thickness: 0.75,
+                    value: {{ (cultura.clima_solo.temperatura_ideal_c.minima + cultura.clima_solo.temperatura_ideal_c.maxima) / 2 }}
+                }
+            }
+        }
+    ];
+
+    const climaLayout = {
+        margin: { t: 25, b: 0, l: 25, r: 25 }
+    };
+
+    Plotly.newPlot('climaChart', climaData, climaLayout);
+</script>
+{% endblock %}

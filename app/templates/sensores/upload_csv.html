@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Upload de Dados CSV - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-upload"></i> Upload de Dados CSV do ESP32</h2>
+    <a href="{{ url_for('sensores.index') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Importar Dados do ESP32</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('sensores.processar_upload_csv') }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    
+                    <!-- Seleção do arquivo -->
+                    <div class="mb-3">
+                        <label for="arquivo_csv" class="form-label">Arquivo CSV *</label>
+                        <input type="file" class="form-control" id="arquivo_csv" name="arquivo_csv" accept=".csv" required>
+                        <div class="form-text">Selecione o arquivo CSV exportado do monitor serial do ESP32</div>
+                        <div class="invalid-feedback">
+                            Por favor, selecione um arquivo CSV válido.
+                        </div>
+                    </div>
+                    
+                    <!-- Configurações de importação -->
+                    <div class="mb-3">
+                        <label for="separador" class="form-label">Separador de Colunas</label>
+                        <select class="form-select" id="separador" name="separador">
+                            <option value="auto">Detectar Automaticamente</option>
+                            <option value=";" selected>Ponto e vírgula (;)</option>
+                            <option value=",">Vírgula (,)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Opções de sensor -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="criar_sensor_automatico" name="criar_sensor_automatico">
+                            <label class="form-check-label" for="criar_sensor_automatico">
+                                Criar sensor automaticamente se não existir
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="sensor_existente">
+                        <label for="sensor_id" class="form-label">Sensor Existente</label>
+                        <select class="form-select" id="sensor_id" name="sensor_id">
+                            <option value="">Selecione um sensor...</option>
+                            {% for sensor in sensores %}
+                            <option value="{{ sensor.id }}">
+                                {% if sensor.tipo == 'S1' %}Umidade{% elif sensor.tipo == 'S2' %}pH{% elif sensor.tipo == 'S3' %}Nutrientes{% else %}{{ sensor.tipo }}{% endif %} 
+                                - ID: {{ sensor.id }}
+                                {% if sensor.modelo %} ({{ sensor.modelo }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Selecione o sensor para associar os dados ou marque a opção acima para criar automaticamente</div>
+                    </div>
+                    
+                    <!-- Campo associado -->
+                    <div class="mb-3">
+                        <label for="campo_id" class="form-label">Campo Associado (Opcional)</label>
+                        <select class="form-select" id="campo_id" name="campo_id">
+                            <option value="">Nenhum campo específico</option>
+                            {% for campo in campos %}
+                            <option value="{{ campo._id }}">{{ campo.campo.cultura_plantada }} - {{ campo.nome_produtor }} ({{ campo.localizacao.municipio }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Associe os dados a um campo específico para melhor organização</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Processar e Importar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Formato do Arquivo</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Formato esperado:</strong></p>
+                <code>timestamp;fosforo;potassio;ph;umidade;irrigacao</code>
+                
+                <p class="mt-3"><strong>Exemplo:</strong></p>
+                <pre class="bg-light p-2 rounded">125240;1;0;9.03;24.00;0
+130248;1;0;10.32;11.00;0
+135256;1;0;6.90;11.00;1</pre>
+                
+                <p class="mt-3"><strong>Colunas:</strong></p>
+                <ul class="small">
+                    <li><strong>timestamp:</strong> Tempo em milissegundos</li>
+                    <li><strong>fosforo:</strong> 1 = presente, 0 = ausente</li>
+                    <li><strong>potassio:</strong> 1 = presente, 0 = ausente</li>
+                    <li><strong>ph:</strong> Valor do pH (0-14)</li>
+                    <li><strong>umidade:</strong> Umidade em % (0-100)</li>
+                    <li><strong>irrigacao:</strong> 1 = ativa, 0 = inativa</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Instruções</h5>
+            </div>
+            <div class="card-body">
+                <ol class="small">
+                    <li>Execute seu projeto ESP32 no Wokwi</li>
+                    <li>Copie os dados do Serial Monitor</li>
+                    <li>Cole em um arquivo de texto e salve como .csv</li>
+                    <li>Faça o upload aqui</li>
+                    <li>Os dados serão importados automaticamente</li>
+                </ol>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> <strong>Dica:</strong> Você pode criar um sensor automaticamente ou associar a um sensor existente.
+                </div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Simulação de Timestamps</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-clock"></i> <strong>Timestamps Simulados:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Os timestamps originais do ESP32 serão substituídos</li>
+                        <li>Será criado um histórico realista com intervalos de 5 minutos</li>
+                        <li>O registro mais recente terá a data/hora atual</li>
+                        <li>Os registros anteriores retrocederão no tempo</li>
+                    </ul>
+                </div>
+                
+                <p><strong>Exemplo:</strong> Se você importar 10 registros hoje às 15:00:</p>
+                <ul class="small">
+                    <li>Registro 1: Hoje às 14:15 (mais antigo)</li>
+                    <li>Registro 2: Hoje às 14:20</li>
+                    <li>...</li>
+                    <li>Registro 10: Hoje às 15:00 (mais recente)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Validação do formulário
+    (() => {
+        'use strict'
+        
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+    
+    // Controlar visibilidade dos campos
+    document.getElementById('criar_sensor_automatico').addEventListener('change', function() {
+        const sensorExistente = document.getElementById('sensor_existente');
+        const sensorSelect = document.getElementById('sensor_id');
+        
+        if (this.checked) {
+            sensorExistente.style.display = 'none';
+            sensorSelect.required = false;
+        } else {
+            sensorExistente.style.display = 'block';
+            sensorSelect.required = true;
+        }
+    });
+    
+    // Preview do arquivo selecionado
+    document.getElementById('arquivo_csv').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n').slice(0, 5); // Primeiras 5 linhas
+                
+                if (lines.length > 0) {
+                    let preview = '<div class="alert alert-success mt-2"><strong>Preview do arquivo:</strong><br>';
+                    lines.forEach(line => {
+                        if (line.trim()) {
+                            preview += '<code>' + line.trim() + '</code><br>';
+                        }
+                    });
+                    preview += '</div>';
+                    
+                    // Remover preview anterior se existir
+                    const oldPreview = document.querySelector('.file-preview');
+                    if (oldPreview) {
+                        oldPreview.remove();
+                    }
+                    
+                    // Adicionar novo preview
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'file-preview';
+                    previewDiv.innerHTML = preview;
+                    e.target.parentNode.appendChild(previewDiv);
+                }
+            };
+            reader.readAsText(file);
+        }
+    });
+</script>
+{% endblock %}

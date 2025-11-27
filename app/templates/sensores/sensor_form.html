@@ -1,0 +1,143 @@
+<!-- app/templates/sensores/sensor_form.html -->
+{% extends "base.html" %}
+
+{% block title %}Adicionar Sensor - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title mb-0">
+            <i class="bi bi-plus-circle"></i> Adicionar Novo Sensor
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Informações do Sensor</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="tipo" class="form-label">Tipo de Sensor</label>
+                    <select class="form-select" id="tipo" name="tipo" required>
+                        <option value="">Selecione o tipo...</option>
+                        <option value="S1">S1 - Sensor de Umidade</option>
+                        <option value="S2">S2 - Sensor de pH</option>
+                        <option value="S3">S3 - Sensor de Nutrientes</option>
+                    </select>
+                    <div class="invalid-feedback">
+                        Por favor, selecione o tipo de sensor.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="modelo" class="form-label">Modelo</label>
+                    <input type="text" class="form-control" id="modelo" name="modelo">
+                    <div class="form-text">Opcional. Ex: "SensorTech A100", "HygroMeter Pro"</div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Posição do Sensor</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="campo_id" class="form-label">Campo de Instalação</label>
+                    <select class="form-select" id="campo_id" name="campo_id">
+                        <option value="">Selecione um campo...</option>
+                        {% for campo in campos %}
+                        <option value="{{ campo._id }}">{{ campo.campo.cultura_plantada }} - {{ campo.nome_produtor }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Opcional. Você pode instalar o sensor em um campo posteriormente.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="profundidade" class="form-label">Profundidade (cm)</label>
+                    <input type="number" step="0.1" min="0" class="form-control" id="profundidade" name="profundidade">
+                    <div class="form-text">Opcional. Profundidade de instalação do sensor no solo.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="latitude" class="form-label">Latitude</label>
+                    <input type="number" step="0.0000001" class="form-control" id="latitude" name="latitude">
+                    <div class="form-text">Opcional. Ex: -3.7436</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="longitude" class="form-label">Longitude</label>
+                    <input type="number" step="0.0000001" class="form-control" id="longitude" name="longitude">
+                    <div class="form-text">Opcional. Ex: -38.5265</div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Dicas:
+                <ul class="mb-0">
+                    <li>O sensor de umidade (S1) mede a umidade do solo em porcentagem (%).</li>
+                    <li>O sensor de pH (S2) mede a acidez do solo em escala de pH (0-14).</li>
+                    <li>O sensor de nutrientes (S3) mede níveis de fósforo (P) e potássio (K) em ppm.</li>
+                </ul>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('sensores.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Adicionar Sensor
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Validação do formulário
+    (() => {
+        'use strict'
+        
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+    
+    // Preencher coordenadas ao selecionar campo
+    document.getElementById('campo_id').addEventListener('change', function() {
+        // Em uma aplicação real, aqui você poderia buscar as coordenadas do centroide do campo
+        // por uma requisição AJAX, mas para este exemplo vamos deixar em branco para preenchimento manual
+        
+        if (this.value === '') {
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+        }
+    });
+    
+    // Sugerir coordenadas do usuário (com permissão)
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnSugerirCoord = document.createElement('button');
+        btnSugerirCoord.type = 'button';
+        btnSugerirCoord.className = 'btn btn-sm btn-outline-secondary mt-1';
+        btnSugerirCoord.innerHTML = '<i class="bi bi-geo-alt"></i> Usar localização atual';
+        btnSugerirCoord.onclick = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                });
+            } else {
+                alert('Geolocalização não é suportada pelo seu navegador.');
+            }
+        };
+        
+        // Inserir após o input de longitude
+        document.getElementById('longitude').parentNode.appendChild(btnSugerirCoord);
+    });
+</script>
+{% endblock %}

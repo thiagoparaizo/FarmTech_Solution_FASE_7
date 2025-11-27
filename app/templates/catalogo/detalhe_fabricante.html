@@ -1,0 +1,86 @@
+<!-- app/templates/catalogo/detalhe_fabricante.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ fabricante.nome }} - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-building"></i> {{ fabricante.nome }}</h2>
+    <div>
+        <a href="{{ url_for('catalogo.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Informações do Fabricante</h5>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th style="width: 150px;">Nome:</th>
+                    <td>{{ fabricante.nome }}</td>
+                </tr>
+                <tr>
+                    <th>País:</th>
+                    <td>{{ fabricante.pais }}</td>
+                </tr>
+                <tr>
+                    <th>Website:</th>
+                    <td><a href="{{ fabricante.website }}" target="_blank">{{ fabricante.website }}</a></td>
+                </tr>
+                <tr>
+                    <th>Descrição:</th>
+                    <td>{{ fabricante.descricao }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Modelos Disponíveis</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for modelo in fabricante.modelos %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">{{ modelo.nome }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ modelo.descricao }}</p>
+                        <p><strong>Tipo:</strong> 
+                            {% if modelo.tipo == 'S1' %}
+                            <span class="badge bg-primary">Umidade</span>
+                            {% elif modelo.tipo == 'S2' %}
+                            <span class="badge bg-warning">pH</span>
+                            {% elif modelo.tipo == 'S3' %}
+                            <span class="badge bg-info">Nutrientes</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Precisão:</strong> {{ modelo.precisao }}</p>
+                        <p><strong>Faixa de Medição:</strong> {{ modelo.faixa_medicao }}</p>
+                        <p><strong>Preço Referência:</strong> {{ modelo.preco_referencia }}</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ url_for('catalogo.detalhe_modelo', modelo_id=modelo.id) }}" class="btn btn-primary btn-sm">Detalhes</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Este fabricante não possui modelos cadastrados.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,362 @@
+<!-- app/templates/sensores/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Sensores - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-broadcast"></i> Sensores</h2>
+    <div>
+        <a href="{{ url_for('sensores.adicionar_sensor') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Adicionar Sensor
+        </a>
+        <a href="{{ url_for('sensores.relatorios') }}" class="btn btn-info">
+            <i class="bi bi-graph-up"></i> Relatórios
+        </a>
+        <button id="btn-iniciar-dashboard" class="btn btn-primary">
+            <i class="bi bi-bar-chart"></i> Abrir Dashboard
+        </button>
+         <button id="btn-iniciar-dashboard-ml" class="btn btn-primary">
+            <i class="bi bi-command"></i> Abrir Dashboard ML
+        </button>
+        <a href="{{ url_for('sensores.upload_csv_form') }}" class="btn btn-info">
+            <i class="bi bi-upload"></i> Upload CSV
+        </a>
+        
+        {% if is_debug %}
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalSimulador">
+            <i class="bi bi-lightning"></i> Simular Leituras
+        </button>
+        {% endif %}
+
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ total_sensores }}</h1>
+                <p class="lead mb-0">Sensores Ativos</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        {% set sensores_umidade = sensores|selectattr('tipo', 'equalto', 'S1')|list %}
+        <div class="card bg-success text-white text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ sensores_umidade|length }}</h1>
+                <p class="lead mb-0">Sensores de Umidade</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        {% set sensores_ph = sensores|selectattr('tipo', 'equalto', 'S2')|list %}
+        <div class="card bg-warning text-white text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ sensores_ph|length }}</h1>
+                <p class="lead mb-0">Sensores de pH</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        {% set sensores_nutrientes = sensores|selectattr('tipo', 'equalto', 'S3')|list %}
+        <div class="card bg-info text-white text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ sensores_nutrientes|length }}</h1>
+                <p class="lead mb-0">Sensores de Nutrientes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-broadcast"></i> Lista de Sensores</h5>
+    </div>
+    <div class="card-body">
+        {% if sensores %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Modelo</th>
+                        <th>Campo</th>
+                        <th>Instalação</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sensor in sensores %}
+                    <tr>
+                        <td>{{ sensor.id }}</td>
+                        <td>
+                            {% if sensor.tipo == 'S1' %}
+                            <span class="badge bg-success">Umidade</span>
+                            {% elif sensor.tipo == 'S2' %}
+                            <span class="badge bg-warning">pH</span>
+                            {% elif sensor.tipo == 'S3' %}
+                            <span class="badge bg-info">Nutrientes</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ sensor.tipo }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ sensor.modelo }}</td>
+                        <td>
+                            {% if sensor.posicao and sensor.posicao.campo_id %}
+                                {% set campo_id = sensor.posicao.campo_id %}
+                                {% for campo in campos %}
+                                    {% if campo._id == campo_id %}
+                                    <a href="{{ url_for('sensores.sensores_por_campo', campo_id=campo_id) }}">
+                                        {{ campo.campo.cultura_plantada }} - {{ campo.nome_produtor }}
+                                    </a>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                            <span class="text-muted">Não instalado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ sensor.data_instalacao.strftime('%d/%m/%Y') if sensor.data_instalacao else '-' }}</td>
+                        <td>
+                            {% if sensor.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('sensores.detalhe_sensor', sensor_id=sensor.id) }}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button class="btn btn-sm btn-primary" onclick="registrarLeitura({{ sensor.id }})">
+                                <i class="bi bi-plus-circle"></i> Leitura
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhum sensor cadastrado. Clique no botão "Adicionar Sensor" para começar.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para Registrar Leitura -->
+<div class="modal fade" id="modalLeitura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registrar Leitura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('sensores.registrar_leitura') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="sensor_id_leitura" name="sensor_id">
+                    
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="unidade" class="form-label">Unidade</label>
+                        <select class="form-select" id="unidade" name="unidade" required>
+                            <option value="%">% (Umidade)</option>
+                            <option value="pH">pH</option>
+                            <option value="ppm">ppm (Nutrientes)</option>
+                            <option value="P_ppm">P_ppm (Fósforo)</option>
+                            <option value="K_ppm">K_ppm (Potássio)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Simulador (apenas em modo DEBUG) -->
+{% if is_debug %}
+<div class="modal fade" id="modalSimulador" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Simulador de Leituras</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="campo_simulacao" class="form-label">Campo</label>
+                    <select class="form-select" id="campo_simulacao" required>
+                        <option value="">Selecione um campo...</option>
+                        {% for campo in campos %}
+                        <option value="{{ campo._id }}">{{ campo.campo.cultura_plantada }} - {{ campo.nome_produtor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Esta funcionalidade simula leituras aleatórias para sensores no campo selecionado. 
+                    Se não existirem sensores, serão criados automaticamente.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" onclick="simularLeituras()">Simular</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function registrarLeitura(sensorId) {
+        document.getElementById('sensor_id_leitura').value = sensorId;
+        
+        // Ajustar o tipo de unidade com base no tipo de sensor
+        const rows = document.querySelectorAll('table tbody tr');
+        for (const row of rows) {
+            const idCell = row.cells[0];
+            if (idCell.textContent.trim() == sensorId) {
+                const tipoCell = row.cells[1];
+                const badgeText = tipoCell.querySelector('.badge').textContent.trim();
+                
+                const unidadeSelect = document.getElementById('unidade');
+                
+                if (badgeText === 'Umidade') {
+                    unidadeSelect.value = '%';
+                } else if (badgeText === 'pH') {
+                    unidadeSelect.value = 'pH';
+                } else if (badgeText === 'Nutrientes') {
+                    unidadeSelect.value = 'ppm';
+                }
+                
+                break;
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('modalLeitura'));
+        modal.show();
+    }
+
+    document.getElementById('btn-iniciar-dashboard').addEventListener('click', function() {
+        // Alterar o botão para indicar que está processando
+        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Iniciando Dashboard...';
+        this.disabled = true;
+        
+        // Fazer requisição AJAX para iniciar o dashboard
+        fetch('{{ url_for("web.iniciar_dashboard") }}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Restaurar o botão
+            this.innerHTML = '<i class="bi bi-bar-chart"></i> Abrir Dashboard';
+            this.disabled = false;
+            
+            // Informar o usuário
+            alert('Dashboard iniciado! Abrindo em uma nova janela...');
+            
+            // Abrir o dashboard em uma nova janela/aba
+            //window.open(data.url, '_blank');
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            // Restaurar o botão
+            this.innerHTML = '<i class="bi bi-bar-chart"></i> Abrir Dashboard';
+            this.disabled = false;
+            
+            alert('Erro ao iniciar o dashboard. Por favor, tente novamente.');
+        });
+    });
+
+    document.getElementById('btn-iniciar-dashboard-ml').addEventListener('click', function() {
+        // Alterar o botão para indicar que está processando
+        this.innerHTML = '<i class="bi bi-hourglass-split"></i> Iniciando Dashboard ML...';
+        this.disabled = true;
+        
+        // Fazer requisição AJAX para iniciar o dashboard
+        fetch('{{ url_for("web.iniciar_dashboard_ml") }}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Restaurar o botão
+            this.innerHTML = '<i class="bi bi-bar-chart"></i> Abrir Dashboard ML';
+            this.disabled = false;
+            
+            // Informar o usuário
+            alert('Dashboard ML iniciado! Abrindo em uma nova janela...');
+            
+            // Abrir o dashboard em uma nova janela/aba
+            //window.open(data.url, '_blank');
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            // Restaurar o botão
+            this.innerHTML = '<i class="bi bi-bar-chart"></i> Abrir Dashboard ML';
+            this.disabled = false;
+            
+            alert('Erro ao iniciar o Dashboard ML. Por favor, tente novamente.');
+        });
+    });
+    
+    {% if is_debug %}
+    function simularLeituras() {
+        const campoId = document.getElementById('campo_simulacao').value;
+        
+        if (!campoId) {
+            alert('Selecione um campo para simular leituras.');
+            return;
+        }
+        
+        // Fazer requisição para o endpoint de simulação
+        fetch('{{ url_for("sensores.simular_leituras") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                campo_id: campoId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.erro) {
+                alert('Erro: ' + data.erro);
+            } else {
+                alert('Simulação concluída com sucesso! Foram geradas ' + 
+                      data.resultados.filter(r => r.sensor_id).length + ' leituras.');
+                
+                // Fechar o modal e recarregar a página
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalSimulador'));
+                modal.hide();
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Ocorreu um erro durante a simulação.');
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}

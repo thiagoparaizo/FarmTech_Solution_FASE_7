@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Culturas - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-grid"></i> Culturas Cadastradas</h2>
+    <a href="{{ url_for('web.adicionar_cultura') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Adicionar Nova Cultura
+    </a>
+</div>
+
+<div class="row">
+    {% for cultura in culturas %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ cultura.nome_cultura }}</h5>
+                <span class="badge bg-info">
+                    {% set min_dias = cultura.dados_agronomicos.ciclo_producao_dias.minimo|int %}
+                    {% set max_dias = cultura.dados_agronomicos.ciclo_producao_dias.maximo|int %}
+                    
+                    {% if min_dias > 365 %}
+                        {{ (min_dias / 365)|round(1) }} 
+                        {% if (min_dias / 365)|round(1) == 1 %}ano{% else %}anos{% endif %}
+                    {% else %}
+                        {{ min_dias }} dias
+                    {% endif %}
+                    
+                    a 
+                    
+                    {% if max_dias > 365 %}
+                        {{ (max_dias / 365)|round(1) }} 
+                        {% if (max_dias / 365)|round(1) == 1 %}ano{% else %}anos{% endif %}
+                    {% else %}
+                        {{ max_dias }} dias
+                    {% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted font-italic">{{ cultura.nome_cientifico }}</h6>
+                <p class="card-text">{{ cultura.descricao }}</p>
+                
+                <div class="mt-3">
+                    <strong>Espaçamento:</strong>
+                    <span class="badge bg-secondary">{{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_linhas|round(1)|format_br(1) }}m × {{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_plantas|round(1)|format_br(1) }}m</span>
+                </div>
+                
+                <div class="mt-2">
+                    <strong>Plantas por hectare:</strong>
+                    <span class="badge bg-secondary">{{ cultura.dados_agronomicos.densidade_plantio.plantas_por_hectare|int|format_int_br }}</span>
+                </div>
+                
+                <div class="mt-2">
+                    <strong>Clima ideal:</strong>
+                    <span class="badge bg-primary">{{ cultura.clima_solo.temperatura_ideal_c.minima }}°C - {{ cultura.clima_solo.temperatura_ideal_c.maxima }}°C</span>
+                </div>
+                
+                <div class="mt-2">
+                    <strong>Solo ideal:</strong>
+                    <span class="badge bg-success">{{ cultura.clima_solo.tipo_solo_ideal }}</span>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{{ url_for('web.visualizar_cultura', cultura_id=cultura._id) }}" class="btn btn-info">
+                    <i class="bi bi-eye"></i> Detalhes
+                </a>
+                <a href="{{ url_for('web.editar_cultura', cultura_id=cultura._id) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRemoverCultura{{ loop.index }}">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para confirmação de remoção -->
+    <div class="modal fade" id="modalRemoverCultura{{ loop.index }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Remoção</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja remover a cultura <strong>{{ cultura.nome_cultura }}</strong>?</p>
+                    <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="{{ url_for('web.remover_cultura', cultura_id=cultura._id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger">Confirmar Remoção</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhuma cultura cadastrada. Clique no botão "Adicionar Nova Cultura" para começar.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

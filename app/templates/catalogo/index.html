@@ -1,0 +1,157 @@
+<!-- app/templates/catalogo/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Catálogo de Sensores - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-box-seam"></i> Catálogo de Sensores</h2>
+    <div>
+        <a href="{{ url_for('web.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <p><i class="bi bi-info-circle"></i> <strong>Sobre o Catálogo:</strong> Este catálogo apresenta os modelos de sensores disponíveis no mercado, organizados por fabricante e tipo. Estes modelos podem ser adquiridos e instalados em seus campos para monitoramento de precisão.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Fabricantes</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for fabricante in fabricantes %}
+                    <a href="{{ url_for('catalogo.detalhe_fabricante', fabricante_id=fabricante.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ fabricante.nome }}</h6>
+                            <small>{{ fabricante.pais }}</small>
+                        </div>
+                        <small class="text-muted">{{ fabricante.modelos|length }} modelos</small>
+                    </a>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Nenhum fabricante cadastrado.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white active" id="umidade-tab" data-bs-toggle="tab" data-bs-target="#umidade" type="button" role="tab" aria-controls="umidade" aria-selected="true">
+                            <i class="bi bi-droplet"></i> Umidade (S1)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white" id="ph-tab" data-bs-toggle="tab" data-bs-target="#ph" type="button" role="tab" aria-controls="ph" aria-selected="false">
+                            <i class="bi bi-calculator"></i> pH (S2)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-white" id="nutrientes-tab" data-bs-toggle="tab" data-bs-target="#nutrientes" type="button" role="tab" aria-controls="nutrientes" aria-selected="false">
+                            <i class="bi bi-moisture"></i> Nutrientes (S3)
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="umidade" role="tabpanel" aria-labelledby="umidade-tab">
+                        <h5 class="mb-3">Sensores de Umidade do Solo</h5>
+                        <div class="row">
+                            {% for modelo in modelos_umidade %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ modelo.nome }}</h6>
+                                        <p class="card-text">{{ modelo.descricao }}</p>
+                                        <p><strong>Precisão:</strong> {{ modelo.precisao }}</p>
+                                        <p><strong>Faixa de Medição:</strong> {{ modelo.faixa_medicao }}</p>
+                                        <p><strong>Preço Referência:</strong> {{ modelo.preco_referencia }}</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a href="{{ url_for('catalogo.detalhe_modelo', modelo_id=modelo.id) }}" class="btn btn-primary btn-sm">Detalhes</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Nenhum sensor de umidade cadastrado.
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="ph" role="tabpanel" aria-labelledby="ph-tab">
+                        <h5 class="mb-3">Sensores de pH do Solo</h5>
+                        <div class="row">
+                            {% for modelo in modelos_ph %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ modelo.nome }}</h6>
+                                        <p class="card-text">{{ modelo.descricao }}</p>
+                                        <p><strong>Precisão:</strong> {{ modelo.precisao }}</p>
+                                        <p><strong>Faixa de Medição:</strong> {{ modelo.faixa_medicao }}</p>
+                                        <p><strong>Preço Referência:</strong> {{ modelo.preco_referencia }}</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a href="{{ url_for('catalogo.detalhe_modelo', modelo_id=modelo.id) }}" class="btn btn-primary btn-sm">Detalhes</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Nenhum sensor de pH cadastrado.
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="nutrientes" role="tabpanel" aria-labelledby="nutrientes-tab">
+                        <h5 class="mb-3">Sensores de Nutrientes</h5>
+                        <div class="row">
+                            {% for modelo in modelos_nutrientes %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ modelo.nome }}</h6>
+                                        <p class="card-text">{{ modelo.descricao }}</p>
+                                        <p><strong>Precisão:</strong> {{ modelo.precisao }}</p>
+                                        <p><strong>Faixa de Medição:</strong> {{ modelo.faixa_medicao }}</p>
+                                        <p><strong>Preço Referência:</strong> {{ modelo.preco_referencia }}</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a href="{{ url_for('catalogo.detalhe_modelo', modelo_id=modelo.id) }}" class="btn btn-primary btn-sm">Detalhes</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> Nenhum sensor de nutrientes cadastrado.
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

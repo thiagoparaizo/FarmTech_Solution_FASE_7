@@ -1,0 +1,971 @@
+<!-- app/templates/calculadora.html-->
+
+{% extends "base.html" %}
+
+{% block title %}Calculadora - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-calculator"></i> Calculadora Agrícola</h2>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <ul class="nav nav-tabs card-header-tabs" id="calculadoraTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-white active" id="area-tab" data-bs-toggle="tab" data-bs-target="#area" type="button" role="tab" aria-controls="area" aria-selected="true">
+                    <i class="bi bi-rulers"></i> Área de Plantio
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-white" id="insumos-tab" data-bs-toggle="tab" data-bs-target="#insumos" type="button" role="tab" aria-controls="insumos" aria-selected="false">
+                    <i class="bi bi-moisture"></i> Insumos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-white" id="irrigacao-tab" data-bs-toggle="tab" data-bs-target="#irrigacao" type="button" role="tab" aria-controls="irrigacao" aria-selected="false">
+                    <i class="bi bi-droplet"></i> Irrigação
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-white" id="plantio-tab" data-bs-toggle="tab" data-bs-target="#plantio" type="button" role="tab" aria-controls="plantio" aria-selected="false">
+                    <i class="bi bi-grid"></i> Plantio
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="calculadoraTabsContent">
+            <!-- Aba de Cálculo de Área -->
+            <div class="tab-pane fade show active" id="area" role="tabpanel" aria-labelledby="area-tab">
+                <h4 class="mb-4">Cálculo de Área de Plantio</h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <form id="calculoAreaForm">
+                                    <div class="mb-3">
+                                        <label for="tipo_geometria" class="form-label">Tipo de Geometria</label>
+                                        <select class="form-select" id="tipo_geometria" name="tipo_geometria" required>
+                                            <option value="">Selecione...</option>
+                                            <option value="retangular">Retangular</option>
+                                            <option value="triangular">Triangular</option>
+                                            <option value="circular">Circular</option>
+                                            <option value="trapezoidal">Trapezoidal</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Campos para geometria retangular -->
+                                    <div class="geometry-fields" id="retangular-fields" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="comprimento_m" class="form-label">Comprimento (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="comprimento_m" name="comprimento_m">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="largura_m" class="form-label">Largura (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="largura_m" name="largura_m">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos para geometria triangular -->
+                                    <div class="geometry-fields" id="triangular-fields" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="base_m" class="form-label">Base (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="base_m" name="base_m">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="altura_m" class="form-label">Altura (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="altura_m" name="altura_m">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos para geometria circular -->
+                                    <div class="geometry-fields" id="circular-fields" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="raio_m" class="form-label">Raio (m)</label>
+                                            <input type="number" step="0.01" min="0.01" class="form-control" id="raio_m" name="raio_m">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campos para geometria trapezoidal -->
+                                    <div class="geometry-fields" id="trapezoidal-fields" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <label for="base_maior_m" class="form-label">Base Maior (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="base_maior_m" name="base_maior_m">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="base_menor_m" class="form-label">Base Menor (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="base_menor_m" name="base_menor_m">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="altura_t_m" class="form-label">Altura (m)</label>
+                                                <input type="number" step="0.01" min="0.01" class="form-control" id="altura_t_m" name="altura_t_m">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary mt-3">
+                                        <i class="bi bi-calculator"></i> Calcular Área
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card" id="resultadoAreaCard" style="display: none;">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Resultado do Cálculo</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-6 mb-3">
+                                        <h3 id="areaM2">0</h3>
+                                        <p>metros quadrados</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h3 id="areaHectare">0</h3>
+                                        <p>hectares</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="areaVisualizacao" style="height: 200px;"></div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <i class="bi bi-info-circle"></i> Você pode salvar este cálculo cadastrando um novo campo.
+                                    <a href="{{ url_for('web.adicionar_campo') }}" class="btn btn-primary btn-sm mt-2">
+                                        <i class="bi bi-plus-circle"></i> Cadastrar Campo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aba de Cálculo de Insumos -->
+            <div class="tab-pane fade" id="insumos" role="tabpanel" aria-labelledby="insumos-tab">
+                <h4 class="mb-4">Cálculo de Insumos</h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <form id="calculoInsumosForm">
+                                    <div class="mb-3">
+                                        <label for="cultura_insumo" class="form-label">Cultura</label>
+                                        <select class="form-select" id="cultura_insumo" name="cultura_insumo" required>
+                                            <option value="">Selecione uma cultura...</option>
+                                            {% for cultura in culturas %}
+                                            <option value="{{ cultura.nome_cultura }}">{{ cultura.nome_cultura }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="area_hectare" class="form-label">Área (hectares)</label>
+                                        <input type="number" step="0.01" min="0.01" class="form-control" id="area_hectare" name="area_hectare" required>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary mt-3">
+                                        <i class="bi bi-calculator"></i> Calcular Insumos
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card" id="resultadoInsumosCard" style="display: none;">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Resultado do Cálculo</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="border-bottom pb-2">Fertilizantes (NPK)</h6>
+                                <div class="row mb-3">
+                                    <div class="col-md-4 text-center">
+                                        <h4 id="nitrogenio">0</h4>
+                                        <p>kg N</p>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <h4 id="fosforo">0</h4>
+                                        <p>kg P2O5</p>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <h4 id="potassio">0</h4>
+                                        <p>kg K2O</p>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="border-bottom pb-2">Total</h6>
+                                <div class="row text-center mb-3">
+                                    <div class="col-md-6">
+                                        <h3 id="totalFertilizante">0</h3>
+                                        <p>kg de fertilizante</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h3 id="custoEstimado">R$ 0,00</h3>
+                                        <p>custo estimado</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="insumosChart" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aba de Irrigação -->
+            <div class="tab-pane fade" id="irrigacao" role="tabpanel" aria-labelledby="irrigacao-tab">
+                <h4 class="mb-4">Cálculo de Irrigação</h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <form id="calculoIrrigacaoForm">
+                                    <div class="mb-3">
+                                        <label for="cultura_irrigacao" class="form-label">Cultura</label>
+                                        <select class="form-select" id="cultura_irrigacao" name="cultura_irrigacao" required>
+                                            <option value="">Selecione uma cultura...</option>
+                                            {% for cultura in culturas %}
+                                            <option value="{{ cultura.nome_cultura }}">{{ cultura.nome_cultura }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="comprimento_campo" class="form-label">Comprimento do Campo (m)</label>
+                                            <input type="number" step="0.01" min="0.01" class="form-control" id="comprimento_campo" name="comprimento_campo" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="largura_campo" class="form-label">Largura do Campo (m)</label>
+                                            <input type="number" step="0.01" min="0.01" class="form-control" id="largura_campo" name="largura_campo" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="volume_por_metro" class="form-label">Volume por Metro Linear (L)</label>
+                                        <input type="number" step="0.1" min="0.1" class="form-control" id="volume_por_metro" name="volume_por_metro" value="0.5" required>
+                                    </div>
+
+                                    <!-- COMPLEMENTO DE CÓDIGO AQUI. VERIFICAR-->
+
+                                    <button type="submit" class="btn btn-primary mt-3">
+                                        <i class="bi bi-calculator"></i> Calcular Irrigação
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card" id="resultadoIrrigacaoCard" style="display: none;">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Resultado do Cálculo</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="border-bottom pb-2">Dados da Irrigação</h6>
+                                <div class="row mb-3">
+                                    <div class="col-md-6 text-center">
+                                        <h4 id="numeroLinhas">0</h4>
+                                        <p>linhas/ruas</p>
+                                    </div>
+                                    <div class="col-md-6 text-center">
+                                        <h4 id="volumePorLinha">0</h4>
+                                        <p>litros por linha</p>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="border-bottom pb-2">Total</h6>
+                                <div class="row text-center mb-3">
+                                    <div class="col-md-12">
+                                        <h3 id="volumeTotal">0</h3>
+                                        <p>litros de água total</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="irrigacaoVisualizacao" style="height: 200px;"></div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <p><i class="bi bi-info-circle"></i> <strong>Dica:</strong> O cálculo considera o volume de água por metro linear para cada linha de plantio.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aba de Plantio -->
+            <div class="tab-pane fade" id="plantio" role="tabpanel" aria-labelledby="plantio-tab">
+                <h4 class="mb-4">Cálculo de Plantio</h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <form id="calculoPlantioForm">
+                                    <div class="mb-3">
+                                        <label for="cultura_plantio" class="form-label">Cultura</label>
+                                        <select class="form-select" id="cultura_plantio" name="cultura_plantio" required>
+                                            <option value="">Selecione uma cultura...</option>
+                                            {% for cultura in culturas %}
+                                            <option value="{{ cultura.nome_cultura }}">{{ cultura.nome_cultura }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="area_plantio" class="form-label">Área (hectares)</label>
+                                            <input type="number" step="0.01" min="0.01" class="form-control" id="area_plantio" name="area_plantio" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="tipo_plantio" class="form-label">Tipo de Plantio</label>
+                                            <select class="form-select" id="tipo_plantio" name="tipo_plantio" required>
+                                                <option value="manual">Manual</option>
+                                                <option value="mecanizado">Mecanizado</option>
+                                                <option value="semimecanizado">Semi-mecanizado</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="taxa_germinacao" class="form-label">Taxa de Germinação (%)</label>
+                                        <input type="number" step="1" min="1" max="100" class="form-control" id="taxa_germinacao" name="taxa_germinacao" value="85" required>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary mt-3">
+                                        <i class="bi bi-calculator"></i> Calcular Plantio
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card" id="resultadoPlantioCard" style="display: none;">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Resultado do Cálculo</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="border-bottom pb-2">Dados do Plantio</h6>
+                                <div class="row mb-3">
+                                    <div class="col-md-6 text-center">
+                                        <h4 id="quantidadePlantas">0</h4>
+                                        <p>plantas totais</p>
+                                    </div>
+                                    <div class="col-md-6 text-center">
+                                        <h4 id="quantidadeSementes">0</h4>
+                                        <p>sementes necessárias</p>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="border-bottom pb-2">Espaçamento</h6>
+                                <div class="row text-center mb-3">
+                                    <div class="col-md-6">
+                                        <h4 id="espacamentoLinhas">0</h4>
+                                        <p>metros entre linhas</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4 id="espacamentoPlantas">0</h4>
+                                        <p>metros entre plantas</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="plantioVisualizacao" style="height: 200px;"></div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <p><i class="bi bi-info-circle"></i> <strong>Informação:</strong> O cálculo de sementes considera a taxa de germinação informada.</p>
+                                    <p>Período de plantio recomendado: <span id="periodoPlantio">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gerenciar exibição dos campos de geometria
+        const tipoGeometriaSelect = document.getElementById('tipo_geometria');
+        if (tipoGeometriaSelect) {
+            tipoGeometriaSelect.addEventListener('change', function() {
+                // Ocultar todos os campos de geometria
+                const geometryFields = document.querySelectorAll('.geometry-fields');
+                geometryFields.forEach(field => {
+                    field.style.display = 'none';
+                });
+                
+                // Exibir apenas os campos relacionados à geometria selecionada
+                const selectedGeometry = this.value;
+                if (selectedGeometry) {
+                    const fieldsToShow = document.getElementById(`${selectedGeometry}-fields`);
+                    if (fieldsToShow) {
+                        fieldsToShow.style.display = 'block';
+                    }
+                }
+            });
+        }
+        
+        // Cálculo de área
+        const calculoAreaForm = document.getElementById('calculoAreaForm');
+        if (calculoAreaForm) {
+            calculoAreaForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Obter valores do formulário
+                const tipoGeometria = document.getElementById('tipo_geometria').value;
+                let params = { tipo_geometria: tipoGeometria };
+                
+                // Adicionar parâmetros de acordo com o tipo de geometria
+                switch (tipoGeometria) {
+                    case 'retangular':
+                        params.comprimento_m = parseFloat(document.getElementById('comprimento_m').value);
+                        params.largura_m = parseFloat(document.getElementById('largura_m').value);
+                        break;
+                    case 'triangular':
+                        params.base_m = parseFloat(document.getElementById('base_m').value);
+                        params.altura_m = parseFloat(document.getElementById('altura_m').value);
+                        break;
+                    case 'circular':
+                        params.raio_m = parseFloat(document.getElementById('raio_m').value);
+                        break;
+                    case 'trapezoidal':
+                        params.base_maior_m = parseFloat(document.getElementById('base_maior_m').value);
+                        params.base_menor_m = parseFloat(document.getElementById('base_menor_m').value);
+                        params.altura_m = parseFloat(document.getElementById('altura_t_m').value);
+                        break;
+                }
+                
+                // Fazer requisição para a API
+                fetch('/api/calculos/area', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao calcular área.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Exibir resultados com formatação para legibilidade
+                    document.getElementById('areaM2').textContent = data.area_m2.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    document.getElementById('areaHectare').textContent = data.area_hectare.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    document.getElementById('resultadoAreaCard').style.display = 'block';
+                    
+                    // Visualização da área
+                    const areaVisualizacao = document.getElementById('areaVisualizacao');
+                    if (areaVisualizacao && window.Plotly) {
+                        visualizarArea(areaVisualizacao, tipoGeometria, params);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao calcular área: ' + error.message);
+                });
+            });
+        }
+
+
+        // Cálculo de insumos
+        const calculoInsumosForm = document.getElementById('calculoInsumosForm');
+        if (calculoInsumosForm) {
+            calculoInsumosForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Obter valores do formulário
+                const cultura = document.getElementById('cultura_insumo').value;
+                const areaHectare = parseFloat(document.getElementById('area_hectare').value);
+                
+                // Fazer requisição para a API com a estrutura correta
+                fetch('/api/calculos/insumos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        campo: {
+                            cultura_plantada: cultura,
+                            area_total_hectare: areaHectare
+                        }
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao calcular insumos.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Formatação para padrão brasileiro (com pontos para milhar e vírgulas para decimais)
+                    document.getElementById('nitrogenio').textContent = data.quantidades_kg.N.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2
+                    });
+                    document.getElementById('fosforo').textContent = data.quantidades_kg.P2O5.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2
+                    });
+                    document.getElementById('potassio').textContent = data.quantidades_kg.K2O.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2
+                    });
+                    document.getElementById('totalFertilizante').textContent = data.quantidades_kg.total_kg.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2
+                    });
+                    
+                    // Valor fictício de R$ 5 por kg de fertilizante
+                    const custoEstimado = data.quantidades_kg.total_kg * 5;
+                    document.getElementById('custoEstimado').textContent = `R$ ${custoEstimado.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2
+                    })}`;
+                    
+                    document.getElementById('resultadoInsumosCard').style.display = 'block';
+                    
+                    // Gráfico de insumos
+                    const insumosChart = document.getElementById('insumosChart');
+                    if (insumosChart && window.Plotly) {
+                        const chartData = [{
+                            type: 'pie',
+                            values: [
+                                data.quantidades_kg.N,
+                                data.quantidades_kg.P2O5,
+                                data.quantidades_kg.K2O
+                            ],
+                            labels: ['N (Nitrogênio)', 'P₂O₅ (Pentóxido de fósforo)', 'K₂O (Óxido de potássio)'],
+                            textinfo: 'label+percent',
+                            marker: {
+                                colors: ['#28a745', '#17a2b8', '#ffc107']
+                            }
+                        }];
+                        
+                        const layout = {
+                            title: 'Distribuição de NPK',
+                            showlegend: true,
+                            legend: {
+                                orientation: 'h'
+                            },
+                            margin: {t: 40, b: 0, l: 0, r: 0}
+                        };
+                        
+                        Plotly.newPlot('insumosChart', chartData, layout);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao calcular insumos: ' + error.message);
+                });
+            });
+        }
+
+        // Cálculo de irrigação
+        const calculoIrrigacaoForm = document.getElementById('calculoIrrigacaoForm');
+        if (calculoIrrigacaoForm) {
+            calculoIrrigacaoForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Obter valores do formulário
+                const cultura = document.getElementById('cultura_irrigacao').value;
+                const comprimento = parseFloat(document.getElementById('comprimento_campo').value);
+                const largura = parseFloat(document.getElementById('largura_campo').value);
+                const volumePorMetro = parseFloat(document.getElementById('volume_por_metro').value);
+                
+                // Fazer requisição para a API
+                fetch('/api/culturas')
+                .then(response => response.json())
+                .then(culturas => {
+                    const culturaSelecionada = culturas.find(c => c.nome_cultura === cultura);
+                    
+                    if (!culturaSelecionada) {
+                        throw new Error('Cultura não encontrada.');
+                    }
+                    
+                    // Obter o espaçamento entre linhas da cultura
+                    const espacamento = culturaSelecionada.dados_agronomicos.densidade_plantio.espacamento_m.entre_linhas;
+                    
+                    // Calcular número de linhas
+                    const numeroLinhas = Math.floor(largura / espacamento);
+                    
+                    // Calcular volume por linha
+                    const volumePorLinha = volumePorMetro * comprimento;
+                    
+                    // Calcular volume total
+                    const volumeTotal = volumePorLinha * numeroLinhas;
+                    
+                    // Exibir resultados
+                    document.getElementById('numeroLinhas').textContent = numeroLinhas;
+                    document.getElementById('volumePorLinha').textContent = volumePorLinha.toFixed(2);
+                    document.getElementById('volumeTotal').textContent = volumeTotal.toFixed(2);
+                    
+                    document.getElementById('resultadoIrrigacaoCard').style.display = 'block';
+                    
+                    // Visualizar irrigação
+                    const irrigacaoVisualizacao = document.getElementById('irrigacaoVisualizacao');
+                    if (irrigacaoVisualizacao && window.Plotly) {
+                        visualizarIrrigacao(irrigacaoVisualizacao, numeroLinhas, comprimento, largura);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao calcular irrigação: ' + error.message);
+                });
+            });
+        }
+        
+        
+        // Código para o formulário de plantio
+        const calculoPlantioForm = document.getElementById('calculoPlantioForm');
+        if (calculoPlantioForm) {
+            calculoPlantioForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Obter valores do formulário
+                const cultura = document.getElementById('cultura_plantio').value;
+                const areaHectare = parseFloat(document.getElementById('area_plantio').value);
+                const tipoPlantio = document.getElementById('tipo_plantio').value;
+                const taxaGerminacao = parseFloat(document.getElementById('taxa_germinacao').value) / 100;
+                
+                // Fazer requisição para a API
+                fetch('/api/calculos/plantas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cultura: cultura,
+                        area_hectare: areaHectare
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao calcular plantio.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Exibir resultados
+                    document.getElementById('quantidadePlantas').textContent = data.quantidade_total_plantas.toLocaleString();
+                    
+                    // Calcular sementes necessárias considerando taxa de germinação
+                    const sementesNecessarias = Math.ceil(data.quantidade_total_plantas / taxaGerminacao);
+                    document.getElementById('quantidadeSementes').textContent = sementesNecessarias.toLocaleString();
+                    
+                    // Exibir espaçamento
+                    // (Obter dados da cultura específica)
+                    fetch(`/api/culturas`)
+                    .then(response => response.json())
+                    .then(culturas => {
+                        const culturaSelecionada = culturas.find(c => c.nome_cultura === cultura);
+                        if (culturaSelecionada) {
+                            const espacamento = culturaSelecionada.dados_agronomicos.densidade_plantio.espacamento_m;
+                            document.getElementById('espacamentoLinhas').textContent = espacamento.entre_linhas.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 2
+                            });
+                            document.getElementById('espacamentoPlantas').textContent = espacamento.entre_plantas.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 2
+                            });
+                            
+                            // Mostrar período recomendado de plantio (fictício, baseado na cultura)
+                            let periodoPlantio = "Fevereiro a Maio";
+                            if (cultura.includes("Feijão")) {
+                                periodoPlantio = "Março a Junho";
+                            }
+                            document.getElementById('periodoPlantio').textContent = periodoPlantio;
+                            
+                            // Mostrar visualização do plantio
+                            const plantioVisualizacao = document.getElementById('plantioVisualizacao');
+                            if (plantioVisualizacao && window.Plotly) {
+                                visualizarPlantio(plantioVisualizacao, espacamento.entre_linhas, espacamento.entre_plantas);
+                            }
+                        }
+                    });
+                    
+                    document.getElementById('resultadoPlantioCard').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao calcular plantio: ' + error.message);
+                });
+            });
+        }
+    });
+
+    // Adicionar após o final do listener DOMContentLoaded e antes da função visualizarPlantio:
+
+// Função para visualizar área na calculadora
+function visualizarArea(element, tipoGeometria, params) {
+    if (!window.Plotly) {
+        console.error('Plotly não está disponível.');
+        return;
+    }
+    
+    let data = [];
+    let layout = {
+        showlegend: false,
+        margin: {t: 0, b: 0, l: 0, r: 0},
+        xaxis: {
+            showgrid: false,
+            zeroline: false,
+            visible: false
+        },
+        yaxis: {
+            showgrid: false,
+            zeroline: false,
+            visible: false,
+            scaleanchor: 'x'
+        }
+    };
+    
+    switch (tipoGeometria) {
+        case 'retangular':
+            data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, params.comprimento_m, params.comprimento_m, 0, 0],
+                y: [0, 0, params.largura_m, params.largura_m, 0],
+                fill: 'toself',
+                fillcolor: 'rgba(40, 167, 69, 0.5)',
+                line: {
+                    color: 'rgb(40, 167, 69)',
+                    width: 2
+                },
+                hoverinfo: 'none'
+            }];
+            break;
+            
+        case 'triangular':
+            data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, params.base_m, params.base_m/2, 0],
+                y: [0, 0, params.altura_m, 0],
+                fill: 'toself',
+                fillcolor: 'rgba(23, 162, 184, 0.5)',
+                line: {
+                    color: 'rgb(23, 162, 184)',
+                    width: 2
+                },
+                hoverinfo: 'none'
+            }];
+            break;
+            
+        case 'circular':
+            // Criar pontos para um círculo
+            const points = 100;
+            const radius = params.raio_m;
+            const x = [];
+            const y = [];
+            
+            for (let i = 0; i <= points; i++) {
+                const angle = (i / points) * 2 * Math.PI;
+                x.push(radius * Math.cos(angle) + radius);
+                y.push(radius * Math.sin(angle) + radius);
+            }
+            
+            data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: x,
+                y: y,
+                fill: 'toself',
+                fillcolor: 'rgba(255, 193, 7, 0.5)',
+                line: {
+                    color: 'rgb(255, 193, 7)',
+                    width: 2
+                },
+                hoverinfo: 'none'
+            }];
+            break;
+            
+        case 'trapezoidal':
+            const baseMaior = params.base_maior_m;
+            const baseMenor = params.base_menor_m;
+            const altura = params.altura_m;
+            const diff = (baseMaior - baseMenor) / 2;
+            
+            data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, baseMaior, baseMaior - diff, diff, 0],
+                y: [0, 0, altura, altura, 0],
+                fill: 'toself',
+                fillcolor: 'rgba(220, 53, 69, 0.5)',
+                line: {
+                    color: 'rgb(220, 53, 69)',
+                    width: 2
+                },
+                hoverinfo: 'none'
+            }];
+            break;
+    }
+    
+    Plotly.newPlot(element, data, layout, {displayModeBar: false});
+}
+
+    // Função para visualizar irrigação
+    function visualizarIrrigacao(element, numeroLinhas, comprimento, largura) {
+        // Criar linhas para representar as ruas de plantio
+        const data = [];
+        
+        // Calcular o espaçamento entre as linhas
+        const espacamento = largura / (numeroLinhas + 1);
+        
+        // Adicionar cada linha
+        for (let i = 1; i <= numeroLinhas; i++) {
+            const y = i * espacamento;
+            
+            data.push({
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, comprimento],
+                y: [y, y],
+                line: {
+                    color: 'rgb(13, 110, 253)',
+                    width: 2,
+                    dash: 'solid'
+                },
+                name: `Linha ${i}`
+            });
+        }
+        
+        // Adicionar contorno do campo
+        data.push({
+            type: 'scatter',
+            mode: 'lines',
+            x: [0, comprimento, comprimento, 0, 0],
+            y: [0, 0, largura, largura, 0],
+            line: {
+                color: 'rgb(40, 167, 69)',
+                width: 2
+            },
+            fill: 'none',
+            name: 'Campo'
+        });
+        
+        const layout = {
+            title: 'Visualização das Linhas de Irrigação',
+            showlegend: false,
+            xaxis: {
+                title: 'Comprimento (m)',
+                zeroline: false
+            },
+            yaxis: {
+                title: 'Largura (m)',
+                zeroline: false,
+                scaleanchor: 'x'
+            }
+        };
+        
+        Plotly.newPlot(element, data, layout);
+    }
+    
+    // Função para visualizar padrão de plantio
+    function visualizarPlantio(element, entreLinhas, entrePlantas) {
+        // Criar um padrão de pontos para representar as plantas
+        const data = [];
+        const tamanhoVisualizacao = 5; // Mostrar uma área 5x5
+        
+        // Pontos representando plantas
+        const x = [];
+        const y = [];
+        
+        // Criar grid de pontos com base no espaçamento
+        for (let i = 0; i < tamanhoVisualizacao; i += entreLinhas) {
+            for (let j = 0; j < tamanhoVisualizacao; j += entrePlantas) {
+                x.push(i);
+                y.push(j);
+            }
+        }
+        
+        data.push({
+            x: x,
+            y: y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                color: '#28a745',
+                size: 10,
+                symbol: 'circle'
+            },
+            name: 'Plantas'
+        });
+        
+        // Adicionar linhas para mostrar o espaçamento
+        for (let i = 0; i < tamanhoVisualizacao; i += entreLinhas) {
+            data.push({
+                x: [i, i],
+                y: [0, tamanhoVisualizacao],
+                mode: 'lines',
+                line: {
+                    color: '#aaaaaa',
+                    width: 1,
+                    dash: 'dot'
+                },
+                showlegend: false
+            });
+        }
+        
+        for (let j = 0; j < tamanhoVisualizacao; j += entrePlantas) {
+            data.push({
+                x: [0, tamanhoVisualizacao],
+                y: [j, j],
+                mode: 'lines',
+                line: {
+                    color: '#aaaaaa',
+                    width: 1,
+                    dash: 'dot'
+                },
+                showlegend: false
+            });
+        }
+        
+        const layout = {
+            title: 'Padrão de Plantio (Visualização Esquemática)',
+            showlegend: false,
+            xaxis: {
+                title: `Espaçamento entre linhas: ${entreLinhas}m`,
+                zeroline: false
+            },
+            yaxis: {
+                title: `Espaçamento entre plantas: ${entrePlantas}m`,
+                zeroline: false,
+                scaleanchor: 'x'
+            }
+        };
+        
+        Plotly.newPlot(element, data, layout);
+    }
+
+    
+</script>
+{% endblock %}
+                                    
+                                    

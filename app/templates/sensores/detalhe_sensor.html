@@ -1,0 +1,300 @@
+<!-- app/templates/sensores/detalhe_sensor.html -->
+{% extends "base.html" %}
+
+{% block title %}Sensor {{ sensor.id }} - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-broadcast"></i> 
+        {% if sensor.tipo == 'S1' %}
+            Sensor de Umidade
+        {% elif sensor.tipo == 'S2' %}
+            Sensor de pH
+        {% elif sensor.tipo == 'S3' %}
+            Sensor de Nutrientes
+        {% else %}
+            Sensor {{ sensor.tipo }}
+        {% endif %}
+    </h2>
+    <div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalLeitura">
+            <i class="bi bi-plus-circle"></i> Registrar Leitura
+        </button>
+        <a href="{{ url_for('sensores.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Informações do Sensor</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th>ID:</th>
+                            <td>{{ sensor.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tipo:</th>
+                            <td>
+                                {% if sensor.tipo == 'S1' %}
+                                <span class="badge bg-success">Umidade</span>
+                                {% elif sensor.tipo == 'S2' %}
+                                <span class="badge bg-warning">pH</span>
+                                {% elif sensor.tipo == 'S3' %}
+                                <span class="badge bg-info">Nutrientes</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ sensor.tipo }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Modelo:</th>
+                            <td>{{ sensor.modelo }}</td>
+                        </tr>
+                        <tr>
+                            <th>Data de Instalação:</th>
+                            <td>{{ sensor.data_instalacao.strftime('%d/%m/%Y') if sensor.data_instalacao else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if sensor.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Última Manutenção:</th>
+                            <td>{{ sensor.ultima_manutencao.strftime('%d/%m/%Y %H:%M') if sensor.ultima_manutencao else '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                {% if campo %}
+                <div class="alert alert-info mt-3">
+                    <h6 class="alert-heading">Campo Associado:</h6>
+                    <p class="mb-1"><strong>Produtor:</strong> {{ campo.nome_produtor }}</p>
+                    <p class="mb-1"><strong>Cultura:</strong> {{ campo.campo.cultura_plantada }}</p>
+                    <p class="mb-0"><strong>Área:</strong> {{ campo.campo.area_total_hectare|round(2) }} hectares</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if alertas %}
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Alertas</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for alerta in alertas %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-1">{{ alerta.tipo }}</h6>
+                            <small>{{ alerta.data_hora.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ alerta.mensagem }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge {% if alerta.severidade == 'alta' %}bg-danger{% elif alerta.severidade == 'média' %}bg-warning{% else %}bg-info{% endif %}">
+                                {{ alerta.severidade }}
+                            </span>
+                            <button class="btn btn-sm btn-success" onclick="resolverAlerta({{ alerta.id }})">
+                                <i class="bi bi-check-circle"></i> Resolver
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Últimas Leituras</h5>
+            </div>
+            <div class="card-body">
+                {% if leituras %}
+                <div id="graficoLeituras" style="height: 300px;"></div>
+                
+                <div class="table-responsive mt-4">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Data e Hora</th>
+                                <th>Valor</th>
+                                <th>Unidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leitura in leituras %}
+                            <tr>
+                                <td>{{ leitura.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ leitura.valor }}</td>
+                                <td>{{ leitura.unidade }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Nenhuma leitura registrada para este sensor.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if estatisticas %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Estatísticas (Últimos 7 dias)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h3>{{ estatisticas.media|round(2) }}</h3>
+                        <p>Média</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3>{{ estatisticas.min|round(2) }}</h3>
+                        <p>Mínimo</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3>{{ estatisticas.max|round(2) }}</h3>
+                        <p>Máximo</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3>{{ estatisticas.desvio_padrao|round(2) }}</h3>
+                        <p>Desvio Padrão</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para Registrar Leitura -->
+<div class="modal fade" id="modalLeitura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registrar Leitura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('sensores.registrar_leitura') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="sensor_id" value="{{ sensor.id }}">
+                    
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="unidade" class="form-label">Unidade</label>
+                        <select class="form-select" id="unidade" name="unidade" required>
+                            {% if sensor.tipo == 'S1' %}
+                            <option value="%">% (Umidade)</option>
+                            {% elif sensor.tipo == 'S2' %}
+                            <option value="pH">pH</option>
+                            {% elif sensor.tipo == 'S3' %}
+                            <option value="ppm">ppm (Nutrientes)</option>
+                            <option value="P_ppm">P_ppm (Fósforo)</option>
+                            <option value="K_ppm">K_ppm (Potássio)</option>
+                            {% else %}
+                            <option value="%">% (Umidade)</option>
+                            <option value="pH">pH</option>
+                            <option value="ppm">ppm (Nutrientes)</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% if leituras %}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Preparar dados para o gráfico
+        const dataHoras = [];
+        const valores = [];
+        
+        {% for leitura in leituras %}
+        dataHoras.push('{{ leitura.data_hora.strftime("%d/%m/%Y %H:%M") }}');
+        valores.push({{ leitura.valor }});
+        {% endfor %}
+        
+        // Inverter arrays para mostrar do mais antigo para o mais recente
+        dataHoras.reverse();
+        valores.reverse();
+        
+        // Criar gráfico de linha
+        const data = [{
+            x: dataHoras,
+            y: valores,
+            type: 'line',
+            name: '{{ leituras[0].unidade }}',
+            line: {
+                color: '{% if sensor.tipo == "S1" %}#28a745{% elif sensor.tipo == "S2" %}#ffc107{% else %}#17a2b8{% endif %}'
+            }
+        }];
+        
+        const layout = {
+            margin: { t: 10, r: 10, l: 50, b: 50 },
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Data e Hora'
+            },
+            yaxis: {
+                title: '{{ leituras[0].unidade }}'
+            }
+        };
+        
+        Plotly.newPlot('graficoLeituras', data, layout);
+    });
+    {% endif %}
+    
+    function resolverAlerta(alertaId) {
+        if (confirm('Marcar este alerta como resolvido?')) {
+            fetch('/sensores/api/resolver-alerta/' + alertaId, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro: ' + data.erro);
+                } else {
+                    alert('Alerta marcado como resolvido!');
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Ocorreu um erro ao resolver o alerta.');
+            });
+        }
+    }
+</script>
+{% endblock %}

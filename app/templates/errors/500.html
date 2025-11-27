@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Erro Interno - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body py-5">
+                    <h1 class="display-1 text-danger">500</h1>
+                    <h2 class="mb-4">Erro Interno do Servidor</h2>
+                    <p class="lead mb-4">Ocorreu um erro inesperado ao processar sua solicitação.</p>
+                    <p class="mb-5">Nossa equipe técnica foi notificada. Por favor, tente novamente mais tarde ou volte para a página inicial.</p>
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('web.index') }}" class="btn btn-primary">
+                            <i class="bi bi-house"></i> Página Inicial
+                        </a>
+                        <button onclick="window.location.reload()" class="btn btn-warning">
+                            <i class="bi bi-arrow-clockwise"></i> Tentar Novamente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

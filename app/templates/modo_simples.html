@@ -1,0 +1,532 @@
+<!-- app/templates/modo_simples.html-->
+
+{% extends "base.html" %}
+
+{% block title %}Modo Simplificado - FarmTech Solutions{% endblock %}
+
+{% block styles %}
+<style>
+    #terminal {
+        background-color: #000;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        padding: 15px;
+        border-radius: 5px;
+        height: 500px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        margin-bottom: 15px;
+    }
+    
+    #terminal:focus {
+        outline: none;
+    }
+    
+    #terminalInput {
+        background-color: #000;
+        color: #00ff00;
+        border: none;
+        font-family: 'Courier New', monospace;
+        width: 100%;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+    
+    #terminalInput:focus {
+        outline: none;
+    }
+    
+    .prompt {
+        color: #00ff00;
+        font-weight: bold;
+    }
+    
+    .command {
+        color: #ffffff;
+    }
+    
+    .result {
+        color: #00ff00;
+    }
+    
+    .error {
+        color: #ff0000;
+    }
+    
+    .help {
+        color: #ffff00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-terminal"></i> Modo Simplificado (Terminal)</h2>
+    <a href="{{ url_for('web.index') }}" class="btn btn-primary">
+        <i class="bi bi-arrow-left"></i> Voltar ao Modo Gráfico
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-terminal"></i> Terminal FarmTech</h5>
+    </div>
+    <div class="card-body p-0">
+        <div id="terminal" tabindex="0">
+<span class="help">
+==========================================
+    FarmTech Solutions - Modo Terminal    
+==========================================
+
+Bem-vindo ao modo terminal da FarmTech Solutions!
+Digite 'help' para ver os comandos disponíveis.
+
+</span><span class="prompt">farmtech </span> <span class="command"></span>
+</div>
+
+        <div class="p-3 bg-dark">
+            <div class="input-group">
+                <span class="input-group-text bg-dark text-success border-0">farmtech></span>
+                <input type="text" class="form-control" id="terminalInput" autocomplete="off" autofocus placeholder="Digite um comando...">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const terminal = document.getElementById('terminal');
+        const terminalInput = document.getElementById('terminalInput');
+        
+        // Histórico de comandos
+        let commandHistory = [];
+        let currentHistoryIndex = -1;
+        
+        // Culturas e campos (serão carregados via API)
+        let culturas = [];
+        let campos = [];
+        
+        // Carregar dados iniciais
+        carregarDados();
+        
+        // Função para carregar dados das APIs
+        async function carregarDados() {
+            try {
+                // Carregar culturas
+                const culturasResponse = await fetch('/api/culturas');
+                culturas = await culturasResponse.json();
+                
+                // Carregar campos
+                const camposResponse = await fetch('/api/campos');
+                campos = await camposResponse.json();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                appendToTerminal('Erro ao carregar dados do servidor.', 'error');
+            }
+        }
+        
+        // Manter o foco no terminal
+        terminal.addEventListener('click', function() {
+            terminalInput.focus();
+        });
+        
+        // Processar comandos
+        terminalInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const command = terminalInput.value.trim();
+                if (command) {
+                    appendToTerminal(command, 'command');
+                    processCommand(command);
+                    commandHistory.push(command);
+                    currentHistoryIndex = commandHistory.length;
+                    terminalInput.value = '';
+                }
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (currentHistoryIndex > 0) {
+                    currentHistoryIndex--;
+                    terminalInput.value = commandHistory[currentHistoryIndex];
+                }
+            } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (currentHistoryIndex < commandHistory.length - 1) {
+                    currentHistoryIndex++;
+                    terminalInput.value = commandHistory[currentHistoryIndex];
+                } else {
+                    currentHistoryIndex = commandHistory.length;
+                    terminalInput.value = '';
+                }
+            }
+        });
+        
+        // Adicionar texto ao terminal
+        function appendToTerminal(text, className = 'result') {
+            if (className === 'command') {
+                const promptSpan = document.createElement('span');
+                promptSpan.className = 'prompt';
+                promptSpan.textContent = 'farmtech> ';
+                terminal.appendChild(promptSpan);
+            }
+            
+            const span = document.createElement('span');
+            span.className = className;
+            span.textContent = text;
+            terminal.appendChild(span);
+            
+            // Adicionar quebra de linha após cada conteúdo
+            terminal.appendChild(document.createElement('br'));
+            
+            // Rolar para o final
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        // Processar comando
+        function processCommand(command) {
+            const parts = command.split(' ');
+            const mainCommand = parts[0].toLowerCase();
+            
+            switch (mainCommand) {
+                case 'help':
+                    showHelp();
+                    break;
+                case 'clear':
+                case 'cls':
+                    clearTerminal();
+                    break;
+                case 'list':
+                    if (parts.length > 1) {
+                        switch (parts[1].toLowerCase()) {
+                            case 'culturas':
+                                listarCulturas();
+                                break;
+                            case 'campos':
+                                listarCampos();
+                                break;
+                            default:
+                                appendToTerminal(`Erro: Parâmetro desconhecido '${parts[1]}'. Use 'culturas' ou 'campos'.`, 'error');
+                        }
+                    } else {
+                        appendToTerminal('Erro: Parâmetro ausente. Use "list culturas" ou "list campos".', 'error');
+                    }
+                    break;
+                case 'show':
+                    if (parts.length > 2) {
+                        const tipo = parts[1].toLowerCase();
+                        const id = parts[2];
+                        mostrarDetalhes(tipo, id);
+                    } else {
+                        appendToTerminal('Erro: Parâmetros insuficientes. Use "show cultura [id]" ou "show campo [id]".', 'error');
+                    }
+                    break;
+                case 'calc':
+                    if (parts.length > 1) {
+                        switch (parts[1].toLowerCase()) {
+                            case 'area':
+                                calcularArea(parts.slice(2));
+                                break;
+                            case 'insumos':
+                                calcularInsumos(parts.slice(2));
+                                break;
+                            default:
+                                appendToTerminal(`Erro: Tipo de cálculo desconhecido '${parts[1]}'.`, 'error');
+                        }
+                    } else {
+                        appendToTerminal('Erro: Tipo de cálculo ausente. Use "calc area" ou "calc insumos".', 'error');
+                    }
+                    break;
+                case 'exit':
+                    window.location.href = "{{ url_for('web.index') }}";
+                    break;
+                default:
+                    appendToTerminal(`Comando desconhecido: ${command}. Digite 'help' para ver os comandos disponíveis.`, 'error');
+            }
+        }
+        
+        // Funções para cada comando
+        function showHelp() {
+            const helpText = `
+                Comandos disponíveis:
+                help                        - Exibe esta ajuda
+                clear, cls                  - Limpa o terminal
+                list culturas               - Lista todas as culturas cadastradas
+                list campos                 - Lista todos os campos cadastrados
+                show cultura [id]           - Mostra detalhes de uma cultura específica
+                show campo [id]             - Mostra detalhes de um campo específico
+                calc area [tipo] [params]   - Calcula área
+                    Exemplos:
+                    calc area retangular 100 50        - Calcula área de um retângulo
+                    calc area triangular 100 50        - Calcula área de um triângulo
+                    calc area circular 25              - Calcula área de um círculo
+                calc insumos [cultura] [area]        - Calcula quantidade de insumos
+                    Exemplo:
+                    calc insumos "Mandioca" 0.5        - Calcula insumos para 0.5 hectares de mandioca
+                exit                        - Retorna ao modo gráfico
+                `;
+            appendToTerminal(helpText, 'help');
+        }
+        
+        function clearTerminal() {
+            terminal.innerHTML = '';
+        }
+        
+        function listarCulturas() {
+            if (culturas.length === 0) {
+                appendToTerminal('Nenhuma cultura cadastrada.', 'result');
+                return;
+            }
+            
+            let result = 'Culturas cadastradas:\n';
+            result += '------------------------\n';
+            result += 'ID | Nome | Nome Científico\n';
+            result += '------------------------\n';
+            
+            culturas.forEach((cultura, index) => {
+                result += `${index + 1}. ${cultura.nome_cultura} (${cultura.nome_cientifico})\n`;
+            });
+            
+            appendToTerminal(result, 'result');
+        }
+        
+        function listarCampos() {
+            if (campos.length === 0) {
+                appendToTerminal('Nenhum campo cadastrado.', 'result');
+                return;
+            }
+            
+            let result = 'Campos cadastrados:\n';
+            result += '------------------------\n';
+            result += 'ID | Produtor | Cultura | Área\n';
+            result += '------------------------\n';
+            
+            campos.forEach((campo, index) => {
+                result += `${index + 1}. ${campo.nome_produtor} - ${campo.campo.cultura_plantada} (${campo.campo.area_total_hectare.toFixed(2)} ha)\n`;
+            });
+            
+            appendToTerminal(result, 'result');
+        }
+        
+        function mostrarDetalhes(tipo, idOrIndex) {
+            let id = idOrIndex;
+            
+            // Se for um número, considerar como índice (1-based)
+            if (!isNaN(parseInt(idOrIndex)) && parseInt(idOrIndex) > 0) {
+                const index = parseInt(idOrIndex) - 1;
+                if (tipo === 'cultura' && index < culturas.length && culturas[index]._id) {
+                    id = culturas[index]._id;
+                } else if (tipo === 'campo' && index < campos.length) {
+                    id = campos[index]._id;
+                }
+            }
+            
+            // Fazer a requisição para a API
+            fetch(`/api/${tipo}s/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} não encontrado(a).`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    let result = '';
+                    
+                    if (tipo === 'cultura') {
+                        result = `Detalhes da Cultura: ${data.nome_cultura}\n`;
+                        result += '------------------------\n';
+                        result += `Nome Científico: ${data.nome_cientifico}\n`;
+                        result += `Descrição: ${data.descricao}\n`;
+                        result += `Espaçamento: ${data.dados_agronomicos.densidade_plantio.espacamento_m.entre_linhas}m x ${data.dados_agronomicos.densidade_plantio.espacamento_m.entre_plantas}m\n`;
+                        result += `Plantas por Hectare: ${data.dados_agronomicos.densidade_plantio.plantas_por_hectare}\n`;
+                        result += `Ciclo de Produção: ${data.dados_agronomicos.ciclo_producao_dias.minimo}-${data.dados_agronomicos.ciclo_producao_dias.maximo} dias\n`;
+                        result += `Temperatura Ideal: ${data.clima_solo.temperatura_ideal_c.minima}-${data.clima_solo.temperatura_ideal_c.maxima}°C\n`;
+                        result += `Solo Ideal: ${data.clima_solo.tipo_solo_ideal}\n`;
+                    } else if (tipo === 'campo') {
+                        result = `Detalhes do Campo: ${data.nome_produtor}\n`;
+                        result += '------------------------\n';
+                        result += `Localização: ${data.localizacao.municipio}, ${data.localizacao.regiao}\n`;
+                        result += `Cultura: ${data.campo.cultura_plantada}\n`;
+                        result += `Área: ${data.campo.area_total_hectare.toFixed(2)} ha (${data.campo.area_total_m2.toFixed(2)} m²)\n`;
+                        result += `Tipo: ${data.campo.tipo_geometria}\n`;
+                        
+                        if (data.campo.dados_insumos) {
+                            result += `\nInsumos:\n`;
+                            result += `  Fertilizante: ${data.campo.dados_insumos.quantidade_total_kg.toFixed(2)} kg\n`;
+                            
+                            if (data.campo.dados_insumos.irrigacao) {
+                                result += `  Irrigação: ${data.campo.dados_insumos.irrigacao.quantidade_total_litros.toFixed(2)} L\n`;
+                            }
+                        }
+                    }
+                    
+                    appendToTerminal(result, 'result');
+                })
+                .catch(error => {
+                    appendToTerminal(`Erro: ${error.message}`, 'error');
+                });
+        }
+        
+        function calcularArea(params) {
+            if (params.length < 1) {
+                appendToTerminal('Erro: Tipo de geometria ausente.', 'error');
+                return;
+            }
+            
+            const tipo = params[0].toLowerCase();
+            const requestData = { tipo_geometria: tipo };
+            
+            switch (tipo) {
+                case 'retangular':
+                    if (params.length < 3) {
+                        appendToTerminal('Erro: Parâmetros insuficientes. Use "calc area retangular [comprimento] [largura]"', 'error');
+                        return;
+                    }
+                    requestData.comprimento_m = parseFloat(params[1]);
+                    requestData.largura_m = parseFloat(params[2]);
+                    break;
+                    
+                case 'triangular':
+                    if (params.length < 3) {
+                        appendToTerminal('Erro: Parâmetros insuficientes. Use "calc area triangular [base] [altura]"', 'error');
+                        return;
+                    }
+                    requestData.base_m = parseFloat(params[1]);
+                    requestData.altura_m = parseFloat(params[2]);
+                    break;
+                    
+                case 'circular':
+                    if (params.length < 2) {
+                        appendToTerminal('Erro: Parâmetros insuficientes. Use "calc area circular [raio]"', 'error');
+                        return;
+                    }
+                    requestData.raio_m = parseFloat(params[1]);
+                    break;
+                    
+                case 'trapezoidal':
+                    if (params.length < 4) {
+                        appendToTerminal('Erro: Parâmetros insuficientes. Use "calc area trapezoidal [base_maior] [base_menor] [altura]"', 'error');
+                        return;
+                    }
+                    requestData.base_maior_m = parseFloat(params[1]);
+                    requestData.base_menor_m = parseFloat(params[2]);
+                    requestData.altura_m = parseFloat(params[3]);
+                    break;
+                    
+                default:
+                    appendToTerminal(`Erro: Tipo de geometria desconhecido '${tipo}'. Use 'retangular', 'triangular', 'circular' ou 'trapezoidal'.`, 'error');
+                    return;
+            }
+            
+            // Verificar se todos os parâmetros são números válidos
+            for (const key in requestData) {
+                if (key !== 'tipo_geometria' && isNaN(requestData[key])) {
+                    appendToTerminal(`Erro: Parâmetro '${key}' inválido. Deve ser um número.`, 'error');
+                    return;
+                }
+            }
+            
+            fetch('/api/calculos/area', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao calcular área.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                let result = '\nResultado do cálculo de área:\n';
+                result += '--------------------------\n';
+                result += `Tipo de Geometria: ${tipo}\n`;
+                
+                switch (tipo) {
+                    case 'retangular':
+                        result += `Dimensões: ${requestData.comprimento_m} × ${requestData.largura_m} m\n`;
+                        break;
+                    case 'triangular':
+                        result += `Base: ${requestData.base_m} m\n`;
+                        result += `Altura: ${requestData.altura_m} m\n`;
+                        break;
+                    case 'circular':
+                        result += `Raio: ${requestData.raio_m} m\n`;
+                        break;
+                    case 'trapezoidal':
+                        result += `Base Maior: ${requestData.base_maior_m} m\n`;
+                        result += `Base Menor: ${requestData.base_menor_m} m\n`;
+                        result += `Altura: ${requestData.altura_m} m\n`;
+                        break;
+                }
+                
+                result += `\nÁrea: ${data.area_m2.toFixed(2)} m²\n`;
+                result += `Área: ${data.area_hectare.toFixed(4)} hectares`;
+                
+                appendToTerminal(result, 'result');
+            })
+            .catch(error => {
+                appendToTerminal(`Erro: ${error.message}`, 'error');
+            });
+        }
+        
+        function calcularInsumos(params) {
+            if (params.length < 2) {
+                appendToTerminal('Erro: Parâmetros insuficientes. Use "calc insumos [cultura] [area_hectare]"', 'error');
+                return;
+            }
+            
+            const cultura = params[0].replace(/^["']|["']$/g, '');  // Remover aspas se houver
+            const areaHectare = parseFloat(params[1]);
+            
+            if (isNaN(areaHectare)) {
+                appendToTerminal('Erro: Área inválida. Deve ser um número em hectares.', 'error');
+                return;
+            }
+            
+            fetch('/api/calculos/insumos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cultura: cultura,
+                    area_hectare: areaHectare
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao calcular insumos.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.quantidades_kg) {
+                    throw new Error('Dados de insumos não encontrados.');
+                }
+                
+                let result = '\nResultado do cálculo de insumos:\n';
+                result += '------------------------------\n';
+                result += `Cultura: ${cultura}\n`;
+                result += `Área: ${areaHectare.toFixed(4)} hectares\n\n`;
+                result += 'Quantidade de Fertilizantes (NPK):\n';
+                result += `  Nitrogênio (N): ${data.quantidades_kg.N.toFixed(2)} kg\n`;
+                result += `  Fósforo (P2O5): ${data.quantidades_kg.P2O5.toFixed(2)} kg\n`;
+                result += `  Potássio (K2O): ${data.quantidades_kg.K2O.toFixed(2)} kg\n`;
+                result += `  Total: ${data.quantidades_kg.total_kg.toFixed(2)} kg\n\n`;
+                
+                // Calcular custo estimado (fictício: R$ 5,00 por kg)
+                const custoEstimado = data.quantidades_kg.total_kg * 5;
+                result += `Custo Estimado: R$ ${custoEstimado.toFixed(2)}`;
+                
+                appendToTerminal(result, 'result');
+            })
+            .catch(error => {
+                appendToTerminal(`Erro: ${error.message}`, 'error');
+            });
+        }
+    });
+        
+</script>
+{% endblock %}     
+    

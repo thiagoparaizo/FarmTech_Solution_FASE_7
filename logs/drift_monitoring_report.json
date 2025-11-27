@@ -1,0 +1,10 @@
+{
+  "report_date": "2025-06-22T19:26:13.879145",
+  "current_model_status": "drift_detected",
+  "evaluation_history": [],
+  "recommendations": [
+    "Executar retreinamento imediato",
+    "Investigar causas do drift",
+    "Aumentar frequ\u00eancia de monitoramento"
+  ]
+}

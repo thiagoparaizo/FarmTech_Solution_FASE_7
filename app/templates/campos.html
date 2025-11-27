@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Campos - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-map"></i> Campos Cadastrados</h2>
+    <a href="{{ url_for('web.adicionar_campo') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Adicionar Novo Campo
+    </a>
+</div>
+
+<div class="row">
+    {% for campo in campos %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ campo.nome_produtor }}</h5>
+                <div>
+                    <span class="badge bg-primary">{{ campo.campo.cultura_plantada }}</span>
+                    <span class="badge bg-success">{{ campo.campo.area_total_hectare|round(2) }} ha</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Localização:</strong> {{ campo.localizacao.municipio }}, {{ campo.localizacao.regiao }}</p>
+                        <p><strong>Tipo:</strong> {{ campo.campo.tipo_geometria|capitalize }}</p>
+                        <p><strong>Plantio:</strong> {{ campo.campo.data_plantio }}</p>
+                        
+                        {% if campo.campo.tipo_geometria == 'retangular' %}
+                        <p><strong>Dimensões:</strong> {{ campo.campo.comprimento_m|int|format_int_br }} x {{ campo.campo.largura_m|int|format_int_br }} m</p>
+                        {% elif campo.campo.tipo_geometria == 'triangular' %}
+                        <p><strong>Dimensões:</strong> Base {{ campo.campo.base_m|int|format_int_br }} m, Altura {{ campo.campo.altura_m|int|format_int_br }} m</p>
+                        {% elif campo.campo.tipo_geometria == 'circular' %}
+                        <p><strong>Dimensões:</strong> Raio {{ campo.campo.raio_m|int|format_int_br }} m</p>
+                        {% elif campo.campo.tipo_geometria == 'trapezoidal' %}
+                        <p><strong>Dimensões:</strong> Bases {{ campo.campo.base_maior_m|int|format_int_br }}/{{ campo.campo.base_menor_m|int|format_int_br }} m, Altura {{ campo.campo.altura_m|int|format_int_br }} m</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border p-2 rounded mb-2 bg-light">
+                            <small class="d-block"><strong>Área total:</strong> {{ campo.campo.area_total_m2|round(2)|format_br(2) }} m²</small>
+                            <small class="d-block"><strong>Área total:</strong> {{ campo.campo.area_total_hectare|round(4)|format_br(2) }} hectares</small>
+                        </div>
+                        
+                        {% if campo.campo.dados_insumos %}
+                        <div class="border p-2 rounded bg-light">
+                            <small class="d-block"><strong>Fertilizante total:</strong> {{ campo.campo.dados_insumos.quantidade_total_kg|round(2)|format_br(2) }} kg</small>
+                            {% if campo.campo.dados_insumos.irrigacao is defined %}
+                            <small class="d-block"><strong>Irrigação total:</strong> {{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros|round(2)|format_br(2) }} L</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{{ url_for('web.visualizar_campo', campo_id=campo._id) }}" class="btn btn-info">
+                    <i class="bi bi-eye"></i> Detalhes
+                </a>
+                <a href="{{ url_for('web.editar_campo', campo_id=campo._id) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRemoverCampo{{ loop.index }}">
+                    <i class="bi bi-trash"></i> Remover
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para confirmação de remoção -->
+    <div class="modal fade" id="modalRemoverCampo{{ loop.index }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Remoção</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja remover o campo de {{ campo.campo.cultura_plantada }} do produtor <strong>{{ campo.nome_produtor }}</strong>?</p>
+                    <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="{{ url_for('web.remover_campo', campo_id=campo._id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger">Confirmar Remoção</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nenhum campo cadastrado. Clique no botão "Adicionar Novo Campo" para começar.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

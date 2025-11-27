@@ -1,0 +1,621 @@
+<!-- app/templates/campo_detalhes.html-->
+
+{% extends "base.html" %}
+
+{% block title %}{{ campo.nome_produtor }} - FarmTech Solutions{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-map"></i> Detalhes do Campo</h2>
+    <div>
+        <a href="{{ url_for('sensores.sensores_por_campo', campo_id=campo._id) }}" class="btn btn-info">
+            <i class="bi bi-broadcast"></i> Gerenciar Sensores
+        </a>
+        <a href="{{ url_for('web.editar_campo', campo_id=campo._id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRemoverCampo">
+            <i class="bi bi-trash"></i> Remover
+        </button>
+        <a href="{{ url_for('web.listar_campos') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ campo.nome_produtor }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="card-subtitle mb-3 text-muted">Informações Básicas</h5>
+                        <p><strong>Localização:</strong> {{ campo.localizacao.municipio }}, {{ campo.localizacao.regiao }}</p>
+                        <p><strong>Cultura Plantada:</strong> {{ campo.campo.cultura_plantada }}</p>
+                        <p><strong>Data de Plantio:</strong> {{ campo.campo.data_plantio }}</p>
+                        <p><strong>Tipo de Geometria:</strong> {{ campo.campo.tipo_geometria|capitalize }}</p>
+                        
+                        {% if campo.campo.tipo_geometria == 'retangular' %}
+                            <p><strong>Dimensões:</strong> {{ campo.campo.comprimento_m }} x {{ campo.campo.largura_m }} m</p>
+                        {% elif campo.campo.tipo_geometria == 'triangular' %}
+                            <p><strong>Base:</strong> {{ campo.campo.base_m }} m</p>
+                            <p><strong>Altura:</strong> {{ campo.campo.altura_m }} m</p>
+                        {% elif campo.campo.tipo_geometria == 'circular' %}
+                            <p><strong>Raio:</strong> {{ campo.campo.raio_m }} m</p>
+                        {% elif campo.campo.tipo_geometria == 'trapezoidal' %}
+                            <p><strong>Base Maior:</strong> {{ campo.campo.base_maior_m }} m</p>
+                            <p><strong>Base Menor:</strong> {{ campo.campo.base_menor_m }} m</p>
+                            <p><strong>Altura:</strong> {{ campo.campo.altura_m }} m</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="card-subtitle mb-3 text-muted">Área Calculada</h5>
+                        <div class="alert alert-success">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h2 class="mb-0">
+                                        {% if campo.campo.area_total_hectare %}
+                                            {{ campo.campo.area_total_hectare|round(2)|format_br(2) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </h2>
+                                    <p class="mb-0">hectares</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="col-md-6">
+                                        <h2 class="mb-0">
+                                            {% if campo.campo.area_total_m2 %}
+                                                {{ campo.campo.area_total_m2|round(2)|format_br(2) }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </h2>
+                                        <p class="mb-0">metros quadrados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="campoVisualizacao" style="height: 200px; background-color: #e9ecef;" class="mt-3 rounded border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-moisture"></i> Manejo de Insumos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2">Fertilizantes</h6>
+                        {% if campo.campo.dados_insumos %}
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Fertilizante</th>
+                                        <td>{{ campo.campo.dados_insumos.fertilizante_utilizado or "NPK Misto" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Quantidade Total</th>
+                                        <td>{{ campo.campo.dados_insumos.quantidade_total_kg|default(0)|round(2)|format_br(2) if campo.campo.dados_insumos is defined else "0.00" }} kg</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Quantidade por Metro Linear</th>
+                                        <td>
+                                            {% if campo.campo.dados_insumos is defined and campo.campo.dados_insumos.quantidade_por_metro_linear_kg is defined and campo.campo.dados_insumos.quantidade_por_metro_linear_kg is not none %}
+                                                {{ campo.campo.dados_insumos.quantidade_por_metro_linear_kg|round(4)|format_br(2) }} kg/m
+                                            {% else %}
+                                                - kg/m
+                                            {% endif %}
+                                        </td>
+                                        
+                                    </tr>
+                                    {% if campo.campo.dados_insumos.fertilizante_recomendado %}
+                                    <tr>
+                                        <th scope="row">Nitrogênio (N)</th>
+                                        <td>{{ campo.campo.dados_insumos.fertilizante_recomendado.N|default(0)|round(2)|format_br(2) if campo.campo.dados_insumos and campo.campo.dados_insumos.fertilizante_recomendado is defined else "0.00" }} kg</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Fósforo (P2O5)</th>
+                                        <td>{{ campo.campo.dados_insumos.fertilizante_recomendado.P2O5|default(0)|round(2)|format_br(2) if campo.campo.dados_insumos and campo.campo.dados_insumos.fertilizante_recomendado is defined else "0.00" }} kg</td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Potássio (K2O)</th>
+                                        <td>{{ campo.campo.dados_insumos.fertilizante_recomendado.K2O|default(0)|round(2)|format_br(2) if campo.campo.dados_insumos and campo.campo.dados_insumos.fertilizante_recomendado is defined else "0.00" }} kg</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Dados de fertilizantes não calculados.
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2">Irrigação</h6>
+                        {% if campo.campo.dados_insumos and campo.campo.dados_insumos.irrigacao %}
+                            <table class="table table-striped">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Método</th>
+                                        <td>{{ campo.campo.dados_insumos.irrigacao.metodo }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Quantidade de Ruas</th>
+                                        <td>{{ campo.campo.dados_insumos.irrigacao.quantidade_ruas }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Volume por Metro</th>
+                                        <td>{{ campo.campo.dados_insumos.irrigacao.volume_litros_por_metro }} litros/m</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Volume Total</th>
+                                        <td>{{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros|default(0)|round(2) if campo.campo.dados_insumos and campo.campo.dados_insumos.irrigacao is defined else "0.00" }} litros</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div id="irrigacaoChart" style="height: 200px;"></div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Dados de irrigação não calculados.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% if cultura %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-grid"></i> Informações da Cultura: {{ cultura.nome_cultura }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="border-bottom pb-2">Dados Agronômicos</h6>
+                        <p><strong>Espaçamento:</strong> {{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_linhas|round(1)|format_br(1) }}m × {{ cultura.dados_agronomicos.densidade_plantio.espacamento_m.entre_plantas|round(1)|format_br(1) }}m</p>
+                        <p><strong>Plantas por Hectare:</strong> {{ cultura.dados_agronomicos.densidade_plantio.plantas_por_hectare|int|format_int_br }} </p>
+                        <p><strong>Ciclo:</strong> {{ cultura.dados_agronomicos.ciclo_producao_dias.minimo }}-{{ cultura.dados_agronomicos.ciclo_producao_dias.maximo }} dias</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="border-bottom pb-2">Clima e Solo</h6>
+                        <p><strong>Temperatura Ideal:</strong> {{ cultura.clima_solo.temperatura_ideal_c.minima }}-{{ cultura.clima_solo.temperatura_ideal_c.maxima }}°C</p>
+                        <p><strong>Precipitação:</strong> {{ cultura.clima_solo.precipitacao_minima_mm }}-{{ cultura.clima_solo.precipitacao_maxima_mm }} mm</p>
+                        <p><strong>Solo Ideal:</strong> {{ cultura.clima_solo.tipo_solo_ideal }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="border-bottom pb-2">Plantio Potencial</h6>
+                        <p><strong>Área Total:</strong> {{ campo.campo.area_total_hectare|round(2)|format_br(2) }} hectares</p>
+                        <p><strong>Plantas Estimadas:</strong> 
+                            {% if cultura and cultura.dados_agronomicos and cultura.dados_agronomicos.densidade_plantio and cultura.dados_agronomicos.densidade_plantio.plantas_por_hectare is defined %}
+                                {{ ((campo.campo.area_total_hectare|default(0)) * cultura.dados_agronomicos.densidade_plantio.plantas_por_hectare|default(0))|int|format_int_br|default(0) }}
+                            {% else %}
+                                0
+                            {% endif %}</p>
+                        <p><strong>Produtividade Potencial:</strong> 
+                            <span class="badge bg-success">Alta</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Informações Climáticas e Irrigação</h5>
+            </div>
+            <div class="card-body">
+                <div id="clima-container">
+                    <div class="text-center">
+                        <button class="btn btn-primary" id="btn-verificar-clima">
+                            <i class="bi bi-cloud-download"></i> Verificar Condições Climáticas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmação de remoção -->
+<div class="modal fade" id="modalRemoverCampo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Remoção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja remover este campo?</p>
+                <p class="text-danger"><small>Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('web.remover_campo', campo_id=campo._id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Confirmar Remoção</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Visualização do campo
+        const tipoGeometria = '{{ campo.campo.tipo_geometria }}';
+        const campoCanvas = document.getElementById('campoVisualizacao');
+        
+        // Desenhar forma do campo usando Plotly
+        if (tipoGeometria === 'retangular') {
+            const data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, 1, 1, 0, 0],
+                y: [0, 0, 1, 1, 0],
+                fill: 'toself',
+                fillcolor: 'rgba(40, 167, 69, 0.5)',
+                line: {
+                    color: 'rgb(40, 167, 69)',
+                    width: 2
+                },
+                name: 'Campo',
+                text: ['{{ campo.campo.comprimento_m }}m', '', '{{ campo.campo.largura_m }}m', '', ''],
+                hoverinfo: 'text'
+            }];
+            
+            const layout = {
+                showlegend: false,
+                xaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false
+                },
+                yaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false,
+                    scaleanchor: 'x'
+                },
+                margin: {t: 0, b: 0, l: 0, r: 0},
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('campoVisualizacao', data, layout, {displayModeBar: false});
+        } else if (tipoGeometria === 'circular') {
+            // Código para desenhar círculo
+            // ...
+        } else if (tipoGeometria === 'triangular') {
+            // Código para desenhar triângulo
+            // ...
+        } else if (tipoGeometria === 'trapezoidal') {
+            // Código para desenhar trapézio
+            // ...
+        }
+        
+        // Gráfico para irrigação (se houver dados)
+        {% if campo.campo.dados_insumos and campo.campo.dados_insumos.irrigacao %}
+        const irrigacaoData = [{
+            type: 'indicator',
+            mode: 'gauge+number',
+            value: {{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros }},
+            title: { text: 'Volume de Irrigação (L)' },
+            gauge: {
+                axis: { range: [0, {{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros * 1.5 }}] },
+                bar: { color: 'rgb(23, 162, 184)' },
+                bgcolor: 'white',
+                borderwidth: 2,
+                bordercolor: 'gray',
+                steps: [
+                    { range: [0, {{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros * 0.5 }}], color: 'rgba(23, 162, 184, 0.2)' },
+                    { range: [{{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros * 0.5 }}, {{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros }}], color: 'rgba(23, 162, 184, 0.5)' }
+                ],
+                threshold: {
+                    line: { color: 'red', width: 4 },
+                    thickness: 0.75,
+                    value: {{ campo.campo.dados_insumos.irrigacao.quantidade_total_litros }}
+                }
+            }
+        }];
+        
+        const irrigacaoLayout = {
+            margin: { t: 25, r: 25, l: 25, b: 25 }
+        };
+        
+        Plotly.newPlot('irrigacaoChart', irrigacaoData, irrigacaoLayout, {displayModeBar: false});
+        {% endif %}
+        
+        // Desenhar outras formas geométricas do campo
+        if (tipoGeometria === 'circular') {
+            // Criar pontos para um círculo
+            const points = 100;
+            const radius = {{ campo.campo.raio_m if campo.campo.tipo_geometria == 'circular' else 0 }};
+            const x = [];
+            const y = [];
+            
+            for (let i = 0; i <= points; i++) {
+                const angle = (i / points) * 2 * Math.PI;
+                x.push(radius * Math.cos(angle) / radius + 0.5);
+                y.push(radius * Math.sin(angle) / radius + 0.5);
+            }
+            
+            const data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: x,
+                y: y,
+                fill: 'toself',
+                fillcolor: 'rgba(255, 193, 7, 0.5)',
+                line: {
+                    color: 'rgb(255, 193, 7)',
+                    width: 2
+                },
+                name: 'Campo',
+                text: ['Raio: {{ campo.campo.raio_m }}m'],
+                hoverinfo: 'text'
+            }];
+            
+            const layout = {
+                showlegend: false,
+                xaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false
+                },
+                yaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false,
+                    scaleanchor: 'x'
+                },
+                margin: {t: 0, b: 0, l: 0, r: 0},
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('campoVisualizacao', data, layout, {displayModeBar: false});
+        } else if (tipoGeometria === 'triangular') {
+            const base = {{ campo.campo.base_m if campo.campo.tipo_geometria == 'triangular' else 0 }};
+            const altura = {{ campo.campo.altura_m if campo.campo.tipo_geometria == 'triangular' else 0 }};
+            
+            const data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, 1, 0.5, 0],
+                y: [0, 0, 1, 0],
+                fill: 'toself',
+                fillcolor: 'rgba(23, 162, 184, 0.5)',
+                line: {
+                    color: 'rgb(23, 162, 184)',
+                    width: 2
+                },
+                name: 'Campo',
+                text: ['', 'Base: {{ campo.campo.base_m }}m', 'Altura: {{ campo.campo.altura_m }}m', ''],
+                hoverinfo: 'text'
+            }];
+            
+            const layout = {
+                showlegend: false,
+                xaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false
+                },
+                yaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false,
+                    scaleanchor: 'x'
+                },
+                margin: {t: 0, b: 0, l: 0, r: 0},
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('campoVisualizacao', data, layout, {displayModeBar: false});
+        } else if (tipoGeometria === 'trapezoidal') {
+            const baseMaior = {{ campo.campo.base_maior_m if campo.campo.tipo_geometria == 'trapezoidal' else 0 }};
+            const baseMenor = {{ campo.campo.base_menor_m if campo.campo.tipo_geometria == 'trapezoidal' else 0 }};
+            const altura = {{ campo.campo.altura_m if campo.campo.tipo_geometria == 'trapezoidal' else 0 }};
+            
+            // Normalizar para visualização
+            const maxBase = Math.max(baseMaior, baseMenor);
+            const xScale = 1 / maxBase;
+            const yScale = 1 / altura;
+            
+            const data = [{
+                type: 'scatter',
+                mode: 'lines',
+                x: [0, baseMaior * xScale, (baseMaior - (baseMaior - baseMenor) / 2) * xScale, (baseMaior - baseMenor) / 2 * xScale, 0],
+                y: [0, 0, altura * yScale, altura * yScale, 0],
+                fill: 'toself',
+                fillcolor: 'rgba(220, 53, 69, 0.5)',
+                line: {
+                    color: 'rgb(220, 53, 69)',
+                    width: 2
+                },
+                name: 'Campo',
+                text: ['', 'Base Maior: {{ campo.campo.base_maior_m }}m', '', 'Base Menor: {{ campo.campo.base_menor_m }}m', ''],
+                hoverinfo: 'text'
+            }];
+            
+            const layout = {
+                showlegend: false,
+                xaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false
+                },
+                yaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    visible: false,
+                    scaleanchor: 'x'
+                },
+                margin: {t: 0, b: 0, l: 0, r: 0},
+                hovermode: 'closest'
+            };
+            
+            Plotly.newPlot('campoVisualizacao', data, layout, {displayModeBar: false});
+        }
+        
+        // Calcular informações meteorológicas fictícias baseadas na cultura
+        {% if cultura %}
+        const tempIdealMin = {{ cultura.clima_solo.temperatura_ideal_c.minima }};
+        const tempIdealMax = {{ cultura.clima_solo.temperatura_ideal_c.maxima }};
+        const precipIdealMin = {{ cultura.clima_solo.precipitacao_minima_mm }};
+        const precipIdealMax = {{ cultura.clima_solo.precipitacao_maxima_mm }};
+        
+        // Representação do estado atual da cultura com base nas condições ideais
+        const estadoAtual = document.createElement('div');
+        estadoAtual.className = 'alert alert-info mt-3';
+        estadoAtual.innerHTML = `
+            <h6 class="border-bottom pb-2">Estado Atual da Cultura</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Temperatura Média Local:</strong> ${Math.floor((tempIdealMin + tempIdealMax) / 2)}°C</p>
+                    <p><strong>Precipitação Média Mensal:</strong> ${Math.floor((precipIdealMin + precipIdealMax) / 2)} mm</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Dias Desde o Plantio:</strong> ${calcularDiasDesdeData('{{ campo.campo.data_plantio }}')}</p>
+                    <p><strong>Ciclo Restante Estimado:</strong> ${Math.max(0, {{ cultura.dados_agronomicos.ciclo_producao_dias.maximo }} - calcularDiasDesdeData('{{ campo.campo.data_plantio }}'))} dias</p>
+                </div>
+            </div>
+        `;
+        
+        // Adicionar após o card de informações da cultura
+        const infoCard = document.querySelector('[class*="card-header bg-info"]').parentNode;
+        infoCard.querySelector('.card-body').appendChild(estadoAtual);
+        {% endif %}
+    });
+
+    document.getElementById('btn-verificar-clima').addEventListener('click', function() {
+        // Mostrar indicador de carregamento
+        document.getElementById('clima-container').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2">Consultando dados climáticos...</p>
+            </div>    
+        `;  
+            // Buscar dados climáticos do servidor
+        fetch(`/sensores/api/verificar-irrigacao-clima/{{ campo._id }}?cidade={{ campo.localizacao.municipio }}`)
+            .then(response => response.json())
+            .then(data => {
+                // Criar HTML com os dados climáticos e recomendação
+                let html = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Dados Climáticos para {{ campo.localizacao.municipio }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6 text-center">
+                                            <h3>${data.clima_atual.temperatura}°C</h3>
+                                            <p>Temperatura</p>
+                                        </div>
+                                        <div class="col-6 text-center">
+                                            <h3>${data.clima_atual.umidade_ar}%</h3>
+                                            <p>Umidade do Ar</p>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info mt-3">
+                                        <p class="mb-0"><strong>Condição:</strong> ${data.clima_atual.descricao}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header ${data.irrigar ? 'bg-success' : 'bg-warning'} text-white">
+                                    <h6 class="mb-0">Recomendação de Irrigação</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <i class="bi ${data.irrigar ? 'bi-droplet-fill text-primary' : 'bi-droplet-half text-warning'} display-1"></i>
+                                    </div>
+                                    <div class="alert ${data.irrigar ? 'alert-success' : 'alert-warning'}">
+                                        <p class="mb-0"><strong>${data.irrigar ? 'Recomendado Irrigar' : 'Irrigação Não Necessária'}</strong></p>
+                                        <p class="mb-0"><small>${data.motivo}</small></p>
+                                    </div>
+                                    <div class="d-grid mt-3">
+                                        <button class="btn ${data.irrigar ? 'btn-success' : 'btn-outline-secondary'}" 
+                                                ${data.irrigar ? '' : 'disabled'}
+                                                onclick="ativarIrrigacao('{{ campo._id }}')">
+                                            <i class="bi bi-droplet"></i> Ativar Irrigação
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('clima-container').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                document.getElementById('clima-container').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Ocorreu um erro ao consultar os dados climáticos. Por favor, tente novamente mais tarde.
+                    </div>
+                `;
+            });
+    });
+
+    function ativarIrrigacao(campoId) {
+        if (confirm("Deseja ativar a irrigação para este campo?")) {
+            // Chamar API para ativar irrigação
+            fetch(`/sensores/api/ativar-irrigacao/${campoId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert(`Erro: ${data.erro}`);
+                } else {
+                    alert(`Irrigação ativada com sucesso! ${data.mensagem}`);
+                    // Recarregar a página para atualizar os dados
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Ocorreu um erro ao ativar a irrigação.');
+            });
+        }
+    }
+            
+    
+    // Função para calcular dias desde uma data
+    function calcularDiasDesdeData(dataString) {
+        const dataPlantio = new Date(dataString);
+        const hoje = new Date();
+        const diffTempo = Math.abs(hoje - dataPlantio);
+        return Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+    }
+</script>
+{% endblock %}

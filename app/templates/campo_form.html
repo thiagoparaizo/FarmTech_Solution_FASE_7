@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if modo == 'editar' %}
+        Editar Campo - FarmTech Solutions
+    {% else %}
+        Novo Campo - FarmTech Solutions
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title mb-0">
+            {% if modo == 'editar' %}
+                <i class="bi bi-pencil"></i> Editar Campo
+            {% else %}
+                <i class="bi bi-plus-circle"></i> Novo Campo
+            {% endif %}
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Informações Básicas</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="nome_produtor" class="form-label">Nome do Produtor</label>
+                    <input type="text" class="form-control" id="nome_produtor" name="nome_produtor" required
+                           value="{{ campo.nome_produtor if campo else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe o nome do produtor.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="cultura_plantada" class="form-label">Cultura Plantada</label>
+                    <select class="form-select" id="cultura_plantada" name="cultura_plantada" required>
+                        <option value="">Selecione uma cultura...</option>
+                        {% for cultura in culturas %}
+                        <option value="{{ cultura.nome_cultura }}" 
+                                {% if campo and campo.campo.cultura_plantada == cultura.nome_cultura %}selected{% endif %}>
+                            {{ cultura.nome_cultura }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">
+                        Por favor, selecione uma cultura.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="municipio" class="form-label">Município</label>
+                    <input type="text" class="form-control" id="municipio" name="municipio" required
+                           value="{{ campo.localizacao.municipio if campo else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe o município.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="regiao" class="form-label">Região</label>
+                    <input type="text" class="form-control" id="regiao" name="regiao" required
+                           value="{{ campo.localizacao.regiao if campo else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a região.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Dados do Campo</h4>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="tipo_geometria" class="form-label">Tipo de Geometria</label>
+                    <select class="form-select" id="tipo_geometria" name="tipo_geometria" required>
+                        <option value="">Selecione...</option>
+                        <option value="retangular" {% if campo and campo.campo.tipo_geometria == 'retangular' %}selected{% endif %}>Retangular</option>
+                        <option value="triangular" {% if campo and campo.campo.tipo_geometria == 'triangular' %}selected{% endif %}>Triangular</option>
+                        <option value="circular" {% if campo and campo.campo.tipo_geometria == 'circular' %}selected{% endif %}>Circular</option>
+                        <option value="trapezoidal" {% if campo and campo.campo.tipo_geometria == 'trapezoidal' %}selected{% endif %}>Trapezoidal</option>
+                    </select>
+                    <div class="invalid-feedback">
+                        Por favor, selecione o tipo de geometria.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="data_plantio" class="form-label">Data de Plantio</label>
+                    <input type="date" class="form-control" id="data_plantio" name="data_plantio" required
+                           value="{{ campo.campo.data_plantio if campo else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a data de plantio.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos para geometria retangular -->
+            <div class="row mb-4 geometry-fields" id="retangular-fields">
+                <div class="col-md-6 mb-3">
+                    <label for="comprimento_m" class="form-label">Comprimento (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="comprimento_m" name="comprimento_m"
+                           value="{{ campo.campo.comprimento_m if campo and campo.campo.tipo_geometria == 'retangular' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe o comprimento.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="largura_m" class="form-label">Largura (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="largura_m" name="largura_m"
+                           value="{{ campo.campo.largura_m if campo and campo.campo.tipo_geometria == 'retangular' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a largura.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos para geometria triangular -->
+            <div class="row mb-4 geometry-fields" id="triangular-fields">
+                <div class="col-md-6 mb-3">
+                    <label for="base_m" class="form-label">Base (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="base_m" name="base_m"
+                           value="{{ campo.campo.base_m if campo and campo.campo.tipo_geometria == 'triangular' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a base.
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="altura_m" class="form-label">Altura (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="altura_m" name="altura_m"
+                           value="{{ campo.campo.altura_m if campo and campo.campo.tipo_geometria == 'triangular' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a altura.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos para geometria circular -->
+            <div class="row mb-4 geometry-fields" id="circular-fields">
+                <div class="col-md-6 mb-3">
+                    <label for="raio_m" class="form-label">Raio (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="raio_m" name="raio_m"
+                           value="{{ campo.campo.raio_m if campo and campo.campo.tipo_geometria == 'circular' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe o raio.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos para geometria trapezoidal -->
+            <div class="row mb-4 geometry-fields" id="trapezoidal-fields">
+                <div class="col-md-4 mb-3">
+                    <label for="base_maior_m" class="form-label">Base Maior (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="base_maior_m" name="base_maior_m"
+                           value="{{ campo.campo.base_maior_m if campo and campo.campo.tipo_geometria == 'trapezoidal' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a base maior.
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="base_menor_m" class="form-label">Base Menor (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="base_menor_m" name="base_menor_m"
+                           value="{{ campo.campo.base_menor_m if campo and campo.campo.tipo_geometria == 'trapezoidal' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a base menor.
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="altura_t_m" class="form-label">Altura (m)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="altura_t_m" name="altura_t_m"
+                           value="{{ campo.campo.altura_m if campo and campo.campo.tipo_geometria == 'trapezoidal' else '' }}">
+                    <div class="invalid-feedback">
+                        Por favor, informe a altura.
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('web.listar_campos') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 
+                    {% if modo == 'editar' %}
+                        Atualizar Campo
+                    {% else %}
+                        Salvar Campo
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Validação do formulário
+    (() => {
+        'use strict'
+        
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        // Loop over them and prevent submission
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+    
+    // Exibir/ocultar campos por tipo de geometria
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoGeometriaSelect = document.getElementById('tipo_geometria');
+        const geometryFields = document.querySelectorAll('.geometry-fields');
+        
+        function toggleGeometryFields() {
+            // Ocultar todos os campos de geometria
+            geometryFields.forEach(field => {
+                field.style.display = 'none';
+                
+                // Desativar validação dos campos ocultos
+                const inputs = field.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.required = false;
+                });
+            });
+            
+            // Exibir campos do tipo de geometria selecionado
+            const selectedGeometry = tipoGeometriaSelect.value;
+            if (selectedGeometry) {
+                const selectedFields = document.getElementById(selectedGeometry + '-fields');
+                if (selectedFields) {
+                    selectedFields.style.display = 'flex';
+                    
+                    // Ativar validação dos campos visíveis
+                    const inputs = selectedFields.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        input.required = true;
+                    });
+                }
+            }
+        }
+        
+        // Chamar a função quando a página carrega e quando o select muda
+        toggleGeometryFields();
+        tipoGeometriaSelect.addEventListener('change', toggleGeometryFields);
+    });
+</script>
+{% endblock %}
